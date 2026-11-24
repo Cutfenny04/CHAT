@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Graha Media: cetak tugas kuliah tanpa tebak-tebakan. Unggah PDF, cek kelayakan, lihat simulasi cetak, dan tahu estimasi harga sebelum kirim.">
+<title>Graha Media — Cetak tanpa tebak-tebakan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/patterns.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/student.css">
+<link rel="stylesheet" href="css/landing.css">
+</head>
+<body class="landing">
+
+<!-- ================= NAVIGASI ================= -->
+<header class="lnav" id="hdr">
+  <div class="wrap">
+    <a href="#top" class="logo">Graha Media<small>studio cetak</small></a>
+    <nav id="lmenu" aria-label="Navigasi">
+      <a href="#fitur">Fitur</a>
+      <a href="#cara">Cara kerja</a>
+      <a href="#layanan">Layanan</a>
+      <a href="#hitung">Hitung harga</a>
+      <a href="#toko">Untuk toko</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-berry cta-nav" href="index.html#/pesan">Cetak sekarang</a>
+    <button class="menu-btn" aria-label="Buka menu" aria-expanded="false" aria-controls="lmenu" onclick="Landing.menu(this)">☰</button>
+  </div>
+</header>
+
+<main id="top">
+<!-- ================= HERO ================= -->
+<section class="hero-l denim">
+  <div class="lace" id="lace" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow reveal">Jasa print untuk mahasiswa</p>
+      <h1 class="reveal">Cetak tugasmu, <em>tanpa tebak-tebakan.</em></h1>
+      <p class="lead reveal">Unggah PDF dari HP. Graha Media memeriksa dokumenmu, menampilkan simulasi hasil cetak, dan memberi perkiraan harga per halaman sebelum kamu mengirim pesanan.</p>
+      <div class="hero-cta reveal">
+        <a class="btn btn-paper" href="index.html#/pesan" id="cta-hero">Mulai cetak</a>
+        <a class="btn btn-ghost" style="color:var(--paper);border-color:rgba(246,244,241,.5)" target="_blank" rel="noopener" data-wa="Halo Graha Media, saya mau tanya tentang layanan cetak.">Tanya via WhatsApp</a>
+      </div>
+      <div class="hero-facts reveal">
+        <div><b>≤10 dtk</b><span>target estimasi harga</span></div>
+        <div><b>6</b><span>pemeriksaan otomatis</span></div>
+        <div><b>3</b><span>ukuran kertas: A4, F4, A3</span></div>
+      </div>
+    </div>
+
+    <div class="stage reveal" aria-hidden="true">
+      <div class="mphone" id="mphone"><span class="notch"></span>
+        <div class="screen">
+          <p class="eyebrow" style="font-size:9px;margin:0">Smart Print Check</p>
+          <p class="serif" style="font-size:19px;font-weight:700;line-height:1.1">Pemeriksaan <em style="color:var(--berry)">selesai</em></p>
+          <div class="mcard">
+            <div class="mscore" id="mscore"></div>
+            <div id="mrows"></div>
+          </div>
+          <div class="mcard" style="padding:10px;display:flex;gap:8px;align-items:center">
+            <span class="badge b-warn">Warna 35%</span><span class="small muted" style="font-size:11px">hal. 1 · Rp1.500</span>
+          </div>
+        </div>
+      </div>
+      <div class="float-patch" id="fpatch"></div>
+      <div class="float-tag">Hal. 6 terindikasi kosong</div>
+      <div class="float-nota" id="fnota">
+        <h4>Nota Jahit</h4>
+        <div id="fnota-lines"></div>
+        <div class="t"><span>Estimasi</span><b id="fnota-total">Rp0</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="tickwrap"><div class="ticker" id="ticker" aria-hidden="true"><div class="track" id="ticktrack"></div></div></div>
+
+<!-- ================= DULU VS SEKARANG ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="shead reveal"><p class="eyebrow">Kenapa beda</p><h2>Tidak perlu lagi <em>tanya-jawab</em> berulang</h2>
+      <p>Selama ini detail cetak dijelaskan lewat chat atau di meja toko, dan harga baru diketahui setelah diproses.</p></div>
+    <div class="versus">
+      <div class="vcard old reveal">
+        <h3>Cara lama</h3>
+        <ol>
+          <li><span>1</span>Kirim file lewat chat, jelaskan ukuran dan warna satu per satu</li>
+          <li><span>2</span>Tunggu toko membalas di jam ramai</li>
+          <li><span>3</span>Baru tahu harga dan ternyata ada halaman kosong ikut tercetak</li>
+        </ol>
+        <div class="chatlog">
+          <span class="bubble me">Kak, mau print 20 lembar, yang warna cuma beberapa</span>
+          <span class="bubble">Yang warna halaman berapa saja?</span>
+          <span class="bubble me">Bentar kak saya cek dulu…</span>
+        </div>
+      </div>
+      <div class="vcard new denim reveal">
+        <h3>Dengan Graha Media</h3>
+        <ol>
+          <li><span>1</span>Unggah PDF, sistem langsung memeriksa halaman kosong, ukuran, orientasi, dan margin</li>
+          <li><span>2</span>Atur kertas dan lihat simulasi hasil cetaknya</li>
+          <li><span>3</span>Tahu biaya tiap halaman, pilih mana yang cukup hitam putih, lalu kirim</li>
+        </ol>
+        <div class="chatlog" style="border-top-color:rgba(246,244,241,.3)">
+          <span class="bubble" style="background:var(--paper)">Pesanan GM-2411-014 sudah selesai, silakan diambil di toko.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stitch-draw" aria-hidden="true"></div>
+
+<!-- ================= FITUR (sticky scroll) ================= -->
+<section class="band" id="fitur">
+  <div class="wrap">
+    <div class="shead reveal"><p class="eyebrow">Fitur unggulan</p><h2>Periksa, simulasikan, <em>optimalkan,</em> cetak</h2></div>
+    <div class="feat">
+      <div class="fsteps" id="fsteps">
+        <article class="fstep on" data-i="0">
+          <span class="num">01 · Smart Print Check</span>
+          <h3>Dokumenmu dicek sebelum dicetak</h3>
+          <p>Begitu PDF diunggah, sistem memeriksa kelayakannya. Kamu yang memutuskan: lanjut, atau perbaiki file dulu.</p>
+          <ul><li data-ic="check">Halaman kosong, bisa dilewati otomatis</li><li data-ic="check">Ukuran & orientasi halaman yang tidak konsisten</li><li data-ic="check">Konten yang terlalu mepet tepi kertas</li><li data-ic="check">PDF rusak atau terkunci</li></ul>
+          <div class="fv-inline"></div>
+        </article>
+        <article class="fstep" data-i="1">
+          <span class="num">02 · Print Preview Simulator</span>
+          <h3>Lihat hasilnya sebelum kertasnya keluar</h3>
+          <p>Coba ukuran kertas, orientasi, skala, bolak-balik, 2 halaman per lembar, sampai posisi jilid. Pilihan yang tersedia mengikuti layanan toko.</p>
+          <ul><li data-ic="check">Peringatan bila konten akan terpotong</li><li data-ic="check">Jumlah lembar terhitung otomatis</li><li data-ic="check">Pengaturan ikut terkirim ke toko</li></ul>
+          <div class="fv-inline"></div>
+        </article>
+        <article class="fstep" data-i="2">
+          <span class="num">03 · Peta Warna Halaman</span>
+          <h3>Tahu kenapa harganya segitu</h3>
+          <p>Proporsi warna tiap halaman dianalisis otomatis. Halaman paling mahal ditandai, dan kamu bisa menjadikannya hitam putih untuk hemat.</p>
+          <ul><li data-ic="check">Biaya per halaman terlihat jelas</li><li data-ic="check">Rincian lengkap di Nota Jahit</li><li data-ic="check">Estimasi, harga akhir dikonfirmasi toko</li></ul>
+          <div class="fv-inline"></div>
+        </article>
+      </div>
+      <div class="fvisual pat-gingham" id="fvisual" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CARA KERJA ================= -->
+<section class="band" id="cara" style="padding-top:0">
+  <div class="wrap">
+    <div class="shead center reveal"><p class="eyebrow">Cara kerja</p><h2>Empat langkah, <em>dari HP</em></h2></div>
+    <div class="howgrid" data-stagger>
+      <div class="how"><div class="n">1</div><h3>Unggah PDF</h3><p>Maksimal 20 MB dan 50 halaman.</p></div>
+      <div class="how"><div class="n">2</div><h3>Cek & atur</h3><p>Tinjau peringatan, lalu atur kertas dan finishing.</p></div>
+      <div class="how"><div class="n">3</div><h3>Lihat estimasi</h3><p>Peta Warna dan Nota Jahit muncul dalam hitungan detik.</p></div>
+      <div class="how"><div class="n">4</div><h3>Kirim & ambil</h3><p>Dapat kartu pesanan, pantau status, ambil di toko.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LAYANAN ================= -->
+<section class="band" id="layanan" style="background:var(--paper)">
+  <div class="wrap">
+    <div class="shead reveal"><p class="eyebrow">Layanan</p><h2>Dari makalah sampai <em>poster seminar</em></h2>
+      <p>Harga di bawah adalah harga mulai. Tarif bertanda simulasi masih menunggu konfirmasi toko.</p></div>
+    <div class="svcgrid" id="svcgrid" data-stagger></div>
+    <div class="reveal" style="margin-top:28px"><a class="btn btn-pine" href="index.html#/katalog">Lihat katalog lengkap</a></div>
+  </div>
+</section>
+
+<!-- ================= KALKULATOR ================= -->
+<section class="band" id="hitung">
+  <div class="wrap">
+    <div class="shead reveal"><p class="eyebrow">Hitung kira-kira</p><h2>Berapa biaya <em>cetakanmu?</em></h2>
+      <p>Geser untuk perkiraan cepat. Untuk angka per halaman yang akurat, unggah PDF-mu di aplikasi.</p></div>
+    <div class="calc">
+      <div class="card reveal">
+        <div class="field" style="margin-top:0"><label for="c-pages">Jumlah halaman <span class="rangeval" id="v-pages">20</span></label><input class="range" type="range" id="c-pages" min="1" max="50" value="20"></div>
+        <div class="field"><label for="c-color">Halaman berwarna <span class="rangeval" id="v-color">25%</span></label><input class="range" type="range" id="c-color" min="0" max="100" step="5" value="25"></div>
+        <div class="field"><span class="lbl">Seberapa banyak warnanya</span><div class="seg" id="c-dens">
+          <button data-v="5">Sedikit</button><button data-v="20" class="on">Sedang</button><button data-v="45">Banyak</button><button data-v="80">Penuh</button></div></div>
+        <div class="field"><span class="lbl">Kertas</span><div class="seg" id="c-paper"><button data-v="A4" class="on">A4</button><button data-v="F4">F4</button><button data-v="A3">A3</button></div></div>
+        <div class="field"><span class="lbl">Salinan</span><div class="qty"><button id="c-minus" aria-label="Kurangi">−</button><output id="c-copies">1</output><button id="c-plus" aria-label="Tambah">+</button></div></div>
+      </div>
+      <div class="calc-out denim reveal" aria-live="polite">
+        <span id="calc-patch"></span>
+        <p class="eyebrow" style="color:var(--frost)">Perkiraan biaya</p>
+        <div class="big" id="c-total">Rp0</div>
+        <span class="small" style="opacity:.8" id="c-sub"></span>
+        <div class="lines" id="c-lines"></div>
+        <a class="btn btn-paper mt" href="index.html#/pesan" style="align-self:flex-start">Hitung dari PDF asli</a>
+        <p class="note">Perkiraan kasar dari tarif yang sama dengan aplikasi. Bukan harga final.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= UNTUK TOKO ================= -->
+<section class="band" id="toko" style="background:var(--paper)">
+  <div class="wrap shop">
+    <div>
+      <div class="shead reveal" style="margin-bottom:0"><p class="eyebrow">Untuk toko</p><h2>Panel yang tetap <em>tenang</em> di jam ramai</h2>
+        <p>Pemilik dan staf memantau pesanan dari iPad atau laptop, tanpa perlu menanyakan ulang detail ke pelanggan.</p></div>
+      <ul class="reveal">
+        <li data-ic="board"><span>Papan pesanan: geser kartu dari <b>Belum selesai</b> ke <b>Selesai</b>.</span></li>
+        <li data-ic="bolt"><span>Mode sibuk: kartu besar, satu ketukan untuk menandai selesai.</span></li>
+        <li data-ic="file"><span>Detail lengkap: konfigurasi cetak, hasil pemeriksaan, Peta Warna, dan catatan.</span></li>
+        <li data-ic="tag"><span>Katalog & tarif bisa diubah sendiri, harga di website langsung ikut.</span></li>
+      </ul>
+      <a class="btn btn-ghost mt reveal" href="index.html#/admin">Lihat panel admin</a>
+    </div>
+    <div class="ipad reveal" aria-hidden="true"><div class="scr">
+      <div class="kcol"><h4>Belum selesai <span class="badge b-ok">2</span></h4>
+        <div class="kc move"><b>GM-2411-014</b>Materi_Kuliah.pdf · 20 hal · A4</div>
+        <div class="kc"><b>GM-2411-015</b>Poster_Seminar.pdf · A3 · laminasi</div></div>
+      <div class="kcol"><h4>Selesai <span class="badge b-ok">1</span></h4>
+        <div class="kc d"><b>GM-2411-012</b>Laporan_Praktikum.pdf · jilid</div></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="band" id="faq">
+  <div class="wrap">
+    <div class="shead center reveal"><p class="eyebrow">Pertanyaan umum</p><h2>Yang sering <em>ditanyakan</em></h2></div>
+    <div class="faq" data-stagger>
+      <details><summary>Apakah harga di website sama dengan harga di toko?</summary><p>Belum tentu. Harga di website adalah estimasi berdasarkan tarif toko dan analisis warna otomatis. Harga akhir dikonfirmasi admin saat pesanan diproses.</p></details>
+      <details><summary>Bagaimana sistem tahu halaman mana yang berwarna?</summary><p>Setiap halaman PDF dianalisis untuk menghitung persentase area berwarna. Tarif warna mengikuti persentase itu, dan kamu bisa memilih halaman tertentu dicetak hitam putih.</p></details>
+      <details><summary>Apakah Smart Print Check menjamin dokumenku sempurna?</summary><p>Tidak. Pemeriksaan memberi indikasi, misalnya halaman terindikasi kosong atau konten mepet tepi. Keputusan tetap di tanganmu.</p></details>
+      <details><summary>File apa saja yang bisa diunggah?</summary><p>Saat ini hanya PDF, maksimal 20 MB dan 50 halaman. PDF yang terkunci kata sandi perlu dibuka kuncinya dulu.</p></details>
+      <details><summary>Bagaimana cara bayar?</summary><p>Pembayaran dilakukan di toko saat mengambil pesanan. Pembayaran online belum tersedia di versi ini.</p></details>
+      <details><summary>Apakah file saya aman?</summary><p>File hanya dipakai untuk pesanan tersebut dan hanya bisa diakses oleh kamu dan admin toko.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA AKHIR ================= -->
+<section class="band" style="padding-top:0">
+  <div class="wrap">
+    <div class="final denim reveal">
+      <div class="lace l" aria-hidden="true"></div><div class="lace r" aria-hidden="true"></div>
+      <h2>Siap cetak <em>tanpa ragu?</em></h2>
+      <p>Unggah PDF-mu sekarang. Cek, atur, dan lihat estimasinya dalam hitungan detik.</p>
+      <div class="hero-cta">
+        <a class="btn btn-paper" href="index.html#/pesan">Mulai cetak</a>
+        <a class="btn btn-ghost" style="color:var(--paper);border-color:rgba(246,244,241,.5)" target="_blank" rel="noopener" data-wa="Halo Graha Media, saya mau tanya tentang layanan cetak.">Tanya via WhatsApp</a>
+      </div>
+      <p class="small" style="margin-top:22px" id="busy-line"></p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="lfoot"><div class="wrap">
+  <span><b class="serif" style="color:var(--pine);font-size:18px">Graha Media</b> · studio cetak</span>
+  <span>Harga di website adalah estimasi · <a href="index.html">Buka aplikasi</a> · <a href="index.html#/admin">Panel admin</a></span>
+</div></footer>
+
+<a class="wa" target="_blank" rel="noopener" data-wa="Halo Graha Media, saya mau tanya tentang layanan cetak." style="right:20px;bottom:20px"><span id="wa-ic"></span><span>WhatsApp</span></a>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/config.js"></script>
+<script src="js/data/products.js"></script>
+<script src="js/data/tariff.js"></script>
+<script src="js/core/utils.js"></script>
+<script src="js/core/store.js"></script>
+<script src="js/core/animations.js"></script>
+<script src="js/landing.js"></script>
+</body>
+</html>

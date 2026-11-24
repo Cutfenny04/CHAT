@@ -10,6 +10,7 @@ Dibuat dengan HTML, CSS, dan JavaScript biasa (tanpa build), dipecah per fitur a
    Alternatif: di terminal folder ini jalankan `python -m http.server 8000`, lalu buka `http://localhost:8000`.
 3. Untuk melihat tampilan HP: tekan F12 → ikon perangkat (Ctrl+Shift+M).
 4. Pindah ke panel admin lewat tombol **Admin · iPad/Web** di bar atas.
+5. Landing page ada di `landing.html` (tombol **Landing** di bar atas aplikasi). Semua tombol "Cetak" di landing membuka aplikasi.
 
 ### Akun demo
 
@@ -31,14 +32,16 @@ Mahasiswa juga bisa membuat akun baru lewat tab **Daftar**.
 
 ```
 graha-media/
-├── index.html                  Halaman utama, memuat semua CSS & JS
+├── index.html                  Aplikasi (mahasiswa + admin), memuat semua CSS & JS
+├── landing.html                Landing page: hero, fitur, cara kerja, layanan, kalkulator, FAQ
 ├── css/
 │   ├── base.css                Token warna palet, reset, tombol, form
 │   ├── patterns.css            Motif denim, renda, polka, kotak-kotak, jahitan
 │   ├── animations.css          Animasi scroll & keyframes, reduced-motion
 │   ├── student.css             Tampilan mahasiswa (HP): header, nav, beranda, katalog, login
 │   ├── order-flow.css          Alur pesan: unggah, cek, simulator, peta warna, nota, status
-│   └── admin.css               Panel admin (iPad/web): dashboard, kanban, tabel, modal
+│   ├── admin.css               Panel admin (iPad/web): dashboard, kanban, tabel, modal
+│   └── landing.css             Landing page
 └── js/
     ├── config.js               Nomor WhatsApp, batas file, jam ramai, akun demo
     ├── data/
@@ -71,7 +74,8 @@ graha-media/
     │   ├── admin-orders.js     Daftar, detail, kanban, mode sibuk
     │   ├── admin-catalog.js    Tambah/ubah/nonaktifkan produk
     │   └── admin-tariff.js     Ubah tarif
-    └── app.js                  Titik mulai aplikasi
+    ├── app.js                  Titik mulai aplikasi
+    └── landing.js              Logika landing page (fitur sticky, kalkulator, layanan dari data produk)
 ```
 
 ## Pemetaan fitur PRD
