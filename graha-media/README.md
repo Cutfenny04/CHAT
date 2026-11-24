@@ -16,8 +16,8 @@ Dibuat dengan HTML, CSS, dan JavaScript biasa (tanpa build), dipecah per fitur a
 
 | Peran | Email | Kata sandi |
 |---|---|---|
-| Mahasiswa | `mahasiswa@demo.id` | `demo123` |
-| Admin | `admin@grahamedia.id` | `admin123` |
+| Mahasiswa | `mahasiswa@demo.id` | `Demo12345` |
+| Admin | `admin@grahamedia.id` | `Admin12345` |
 
 Mahasiswa juga bisa membuat akun baru lewat tab **Daftar**.
 
@@ -34,6 +34,7 @@ Mahasiswa juga bisa membuat akun baru lewat tab **Daftar**.
 graha-media/
 ├── index.html                  Aplikasi (mahasiswa + admin), memuat semua CSS & JS
 ├── landing.html                Landing page: hero, fitur, cara kerja, layanan, kalkulator, FAQ
+├── backend/                    API Express + PostgreSQL aman (anti SQL injection) — lihat backend/README.md
 ├── css/
 │   ├── base.css                Token warna palet, reset, tombol, form
 │   ├── patterns.css            Motif denim, renda, polka, kotak-kotak, jahitan
@@ -49,6 +50,7 @@ graha-media/
     │   └── tariff.js           Tarif warna, pengali kertas, ukuran kertas
     ├── core/
     │   ├── utils.js            Fungsi bantu, format Rupiah, ikon
+    │   ├── security.js         Lapisan keamanan: validasi, deteksi SQLi/XSS, hash sandi, batas login
     │   ├── store.js            Penyimpanan data (localStorage) — pengganti backend
     │   ├── state.js            State tampilan yang sedang aktif
     │   ├── animations.js       Logika animasi scroll
@@ -73,7 +75,8 @@ graha-media/
     │   ├── admin-shell.js      Sidebar & kerangka
     │   ├── admin-orders.js     Daftar, detail, kanban, mode sibuk
     │   ├── admin-catalog.js    Tambah/ubah/nonaktifkan produk
-    │   └── admin-tariff.js     Ubah tarif
+    │   ├── admin-tariff.js     Ubah tarif
+    │   └── admin-security.js   Menu Keamanan: log kejadian & perlindungan aktif
     ├── app.js                  Titik mulai aplikasi
     └── landing.js              Logika landing page (fitur sticky, kalkulator, layanan dari data produk)
 ```
@@ -99,11 +102,36 @@ graha-media/
 | A-09 | Chat pelanggan via WhatsApp | `admin/admin-orders.js` |
 | A-10, A-11 | Laporan pemeriksaan & konfigurasi cetak | `admin/admin-orders.js` |
 
+## Keamanan
+
+Keamanan dibuat berlapis. Lapisan di browser bisa dilewati penyerang, jadi perlindungan utama
+dari SQL injection ada di backend (parameterized query + hak akses database). Rinciannya di `backend/README.md`.
+
+**Frontend (`js/core/security.js`)**
+- Validasi & sanitasi semua isian (nama, email, WA, kata sandi, catatan, pencarian, form produk, tarif): panjang, format, karakter kontrol.
+- Deteksi pola SQL injection (`' OR 1=1`, `UNION SELECT`, `; DROP TABLE`, komentar `--`, `pg_sleep`, dll.) dan XSS (`<script>`, `onerror=`, `javascript:`) → ditolak dan dicatat.
+- Semua teks pengguna di-escape sebelum ditampilkan.
+- Kata sandi disimpan sebagai hash SHA-256 bergaram (3.000 putaran), aturan minimal 8 karakter huruf + angka.
+- Login dikunci 60 detik setelah 5 kali gagal; sesi berakhir otomatis setelah 8 jam.
+- Penjaga peran: aksi admin ditolak untuk akun non-admin, termasuk bila dipanggil lewat console.
+- File diunggah dicek isinya benar-benar PDF (magic bytes `%PDF-`), nama file dibersihkan.
+- JSON dari penyimpanan dibaca tanpa prototype pollution.
+- Content Security Policy di `index.html` dan `landing.html`.
+- Menu admin **Keamanan** menampilkan log kejadian (SQLi/XSS ditolak, login gagal, akses ditolak).
+
+**Backend (`backend/`)**: parameterized query lewat `sql\`\``, validasi Zod, bcrypt, JWT di cookie httpOnly,
+CSRF token, rate limit, Helmet, CORS, upload aman, role database minimum + Row Level Security.
+Jalankan `npm test` di folder `backend` untuk 14 uji keamanan (termasuk payload SQL injection).
+
+**Coba sendiri:** ketik `' OR '1'='1` di kolom pencarian atau email login, lalu buka Admin → Keamanan.
+
 ## Batasan prototype
 
 - Data (akun, pesanan, katalog, tarif) disimpan di **localStorage browser**, bukan database. Hapus data situs di browser untuk mengulang dari awal.
 - File PDF tidak diunggah ke server; tombol **Unduh PDF** di admin nonaktif.
-- Kata sandi akun demo tersimpan apa adanya, hanya untuk demo. Backend asli wajib meng-hash kata sandi.
+- Hash kata sandi di browser hanya pelindung tambahan; di backend memakai bcrypt.
+- CSP masih mengizinkan skrip inline karena tombol memakai `onclick`. Untuk produksi, pindahkan ke `addEventListener` lalu hapus `'unsafe-inline'`.
+- Data di localStorage tetap bisa diubah oleh orang yang memegang perangkat; keamanan sebenarnya ada setelah backend dipakai.
 - Tarif selain hitam putih masih **simulasi** sampai dikonfirmasi Pak Herman.
 - Ganti `WA_TOKO` di `js/config.js` dengan nomor WhatsApp toko yang asli.
 

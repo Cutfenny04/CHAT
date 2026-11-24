@@ -4,7 +4,7 @@
      #/                beranda          #/katalog        katalog
      #/produk/<slug>   detail produk    #/pesan[/<slug>] alur pesan *
      #/pesanan         status pesanan * #/profil         profil *
-     #/masuk           masuk/daftar     #/admin[/katalog|/tarif] panel admin **
+     #/masuk           masuk/daftar     #/admin[/katalog|/tarif|/keamanan] panel admin **
    *  butuh login mahasiswa   ** butuh login admin
    ========================================================= */
 function resolveView(){
@@ -15,7 +15,7 @@ function resolveView(){
   if(a === 'admin'){
     if(!me || me.role !== 'admin') return { admin:true, changed, html:viewAdminLogin() };
     S.editing = changed ? null : S.editing;
-    return { admin:true, changed, html: b === 'katalog' ? viewAdminCatalog() : b === 'tarif' ? viewAdminTariff() : viewAdminOrders() };
+    return { admin:true, changed, html: b === 'katalog' ? viewAdminCatalog() : b === 'tarif' ? viewAdminTariff() : b === 'keamanan' ? viewAdminSecurity() : viewAdminOrders() };
   }
 
   const needLogin = ['pesan','pesanan','profil'].includes(a);

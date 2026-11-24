@@ -15,11 +15,14 @@ const CONFIG = {
   }
 };
 
-/* Akun demo prototype. Di backend asli kata sandi di-hash dan disimpan di Supabase. */
+/* Akun demo prototype. Kata sandi di sini hanya untuk tombol "isi otomatis";
+   yang disimpan di browser hanya hash bergaram (lihat core/security.js & core/store.js).
+   Di backend asli akun disimpan di Supabase dengan bcrypt. */
 const DEMO_USERS = [
-  { email:'mahasiswa@demo.id',    password:'demo123',  role:'mahasiswa', name:'Mahasiswa Demo', wa:'6281200000000' },
-  { email:'admin@grahamedia.id',  password:'admin123', role:'admin',     name:'Pak Herman',     wa:'6281234567890' }
+  { email:'mahasiswa@demo.id',   password:'Demo12345',  role:'mahasiswa', name:'Mahasiswa Demo', wa:'6281200000000' },
+  { email:'admin@grahamedia.id', password:'Admin12345', role:'admin',     name:'Pak Herman',     wa:'6281234567890' }
 ];
+const SESSION_HOURS = 8;   // sesi berakhir otomatis setelah 8 jam
 
 /* Pengguna yang memilih "kurangi gerakan" di sistem operasinya */
 const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

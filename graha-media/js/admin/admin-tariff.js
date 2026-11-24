@@ -21,21 +21,25 @@ function viewAdminTariff(){
 
 Object.assign(App, {
   saveTariff(){
-    const num = id => Number($('#' + id).value);
+    if(!requireRole('admin')) return;
+    // Keamanan: angka dibatasi rentang wajar; nilai di luar rentang ditolak
+    const num = id => Security.number($('#' + id).value, id.startsWith('t-pf-') ? 0.1 : 1, id.startsWith('t-pf-') ? 10 : 1000000);
+    const status = id => ['simulasi','terkonfirmasi'].includes($('#' + id).value) ? $('#' + id).value : 'simulasi';
     const T = Store.tariff();
     const tiers = T.tiers.map((t, i) => ({ ...t, price:num('t-tier' + i) }));
     const paperFactor = { ...T.paperFactor }; Object.keys(paperFactor).forEach(k => { if(k !== 'A4') paperFactor[k] = num('t-pf-' + k); });
     const all = [num('t-bw'), ...tiers.map(t => t.price), ...Object.values(paperFactor)];
-    if(all.some(v => !(v > 0))){ toast('Semua tarif harus lebih dari 0'); return; }
-    Store.saveTariff({ tiers, paperFactor, tierStatus:$('#s-tier').value, paperStatus:$('#s-paper').value });
+    if(all.some(v => v === null)){ toast('Tarif harus angka 1 – 1.000.000 (pengali 0,1 – 10)'); return; }
+    Store.saveTariff({ tiers, paperFactor, tierStatus:status('s-tier'), paperStatus:status('s-paper') });
     const list = Store.products();
     const setP = (sku, price, status) => { const p = list.find(x => x.sku === sku); p.base_price = price; p.price_status = status; };
-    setP('PRT-001', num('t-bw'), $('#s-bw').value);
-    ['JLD-001','JLD-002','FIN-001','FIN-002'].forEach(s => setP(s, num('t-' + s), $('#s-' + s).value));
+    setP('PRT-001', num('t-bw'), status('s-bw'));
+    ['JLD-001','JLD-002','FIN-001','FIN-002'].forEach(s => setP(s, num('t-' + s), status('s-' + s)));
     Store.saveProducts(list);
     toast('Tarif disimpan'); render(true);
   },
   resetTariff(){
+    if(!requireRole('admin')) return;
     Store.saveTariff(DEFAULT_TARIFF);
     const list = Store.products();
     ['PRT-001','JLD-001','JLD-002','FIN-001','FIN-002'].forEach(s => { const d = DEFAULT_PRODUCTS.find(x => x.sku === s), p = list.find(x => x.sku === s); p.base_price = d.base_price; p.price_status = d.price_status; });

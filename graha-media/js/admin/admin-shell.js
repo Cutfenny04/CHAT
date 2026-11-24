@@ -3,7 +3,7 @@
    ========================================================= */
 function adminShell(active, content){
   const me = Store.session();
-  const nav = [['', 'Pesanan', I.receipt], ['katalog', 'Katalog', I.tag], ['tarif', 'Tarif', I.coins]];
+  const nav = [['', 'Pesanan', I.receipt], ['katalog', 'Katalog', I.tag], ['tarif', 'Tarif', I.coins], ['keamanan', 'Keamanan', I.shield]];
   return `<div class="adm"><aside class="side denim"><div class="lace" aria-hidden="true"></div>
     <div class="brand">Graha Media<small>panel admin</small></div>
     <nav aria-label="Menu admin">${nav.map(([h, l, i]) => `<a href="#/admin${h ? '/' + h : ''}" class="${active === h ? 'on' : ''}" ${active === h ? 'aria-current="page"' : ''}>${i}<span>${l}</span></a>`).join('')}</nav>

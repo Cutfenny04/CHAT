@@ -75,7 +75,7 @@ function viewSimStep(){
     <div class="field"><span class="lbl">Finishing</span>
       <label class="toggle"><input type="checkbox" ${f.laminasi ? 'checked' : ''} onchange="App.fin('laminasi',this.checked)"> Laminasi (${rp(Store.product('FIN-001').base_price)}/lembar)</label><br>
       <label class="toggle"><input type="checkbox" ${f.potong ? 'checked' : ''} onchange="App.fin('potong',this.checked)"> Potong kertas (${rp(Store.product('FIN-002').base_price)})</label></div>
-    <div class="field"><label for="note">Catatan custom</label><textarea id="note" rows="3" placeholder="Mis. warna sampul biru, potong sesuai garis…" oninput="S.flow.note=this.value">${esc(f.note)}</textarea></div>
+    <div class="field"><label for="note">Catatan custom</label><textarea id="note" rows="3" maxlength="500" placeholder="Mis. warna sampul biru, potong sesuai garis…" oninput="S.flow.note=this.value">${esc(f.note)}</textarea></div>
     <button class="btn btn-berry btn-block mt" onclick="App.step(4)">Lihat Peta Warna & harga ${I.right}</button>
   </div>`;
 }

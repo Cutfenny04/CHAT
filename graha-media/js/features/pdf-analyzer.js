@@ -58,7 +58,7 @@ async function loadPdfJs(){
 
 /* Membaca file PDF. onProgress(done, total, label). Hasil: {meta, pages, fileState} */
 async function readPdf(file, onProgress){
-  const meta = { name:file.name, mb:(file.size/1048576).toFixed(1).replace('.',',') + ' MB', pages:0 };
+  const meta = { name:Security.safeFileName(file.name), mb:(file.size/1048576).toFixed(1).replace('.',',') + ' MB', pages:0 };
   const lib = await loadPdfJs();   // melempar error bila CDN gagal
   let doc;
   try{ doc = await lib.getDocument({ data:new Uint8Array(await file.arrayBuffer()) }).promise; }

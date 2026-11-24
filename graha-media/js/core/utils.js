@@ -55,6 +55,7 @@ const I = {
   plus:ic('<path d="M12 5v14M5 12h14"/>'),
   logout:ic('<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4M6 12h10"/>'),
   repeat:ic('<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 014-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 01-4 4H4"/>'),
+  shield:ic('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>'),
   needle:`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M14 50L46 14"/><ellipse cx="47.5" cy="12.5" rx="3" ry="5" transform="rotate(42 47.5 12.5)"/><path d="M47 13c6 8 4 22-10 28" stroke-dasharray="3 4"/><path d="M8 56h22" stroke-dasharray="4 4"/></svg>`
 };
 

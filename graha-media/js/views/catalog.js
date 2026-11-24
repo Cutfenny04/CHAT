@@ -18,7 +18,7 @@ function viewCatalog(){
   return phone(`
   <section class="sec" style="padding-bottom:10px"><p class="eyebrow reveal">Katalog</p><h1 class="h1 reveal">Mau cetak <em>apa</em> hari ini?</h1></section>
   <div class="searchbox reveal">${I.search}<label class="sr" for="q">Cari layanan</label>
-    <input id="q" type="search" placeholder="Cari: print skripsi, fc, poster…" value="${esc(S.q)}" oninput="App.search(this.value)" autocomplete="off"></div>
+    <input id="q" type="search" maxlength="60" placeholder="Cari: print skripsi, fc, poster…" value="${esc(S.q)}" oninput="App.search(this.value)" autocomplete="off"></div>
   <div class="chips reveal" id="sugg" ${S.q ? 'hidden' : ''}>${SEARCH_SUGGESTIONS.map(s => `<button class="chip" onclick="App.search('${s}',true)">${s}</button>`).join('')}</div>
   <div class="chips reveal">${[{id:'all', name:'Semua'}, ...CATEGORIES].map(c => `<button class="chip ${S.cat === c.id ? 'on' : ''}" onclick="App.cat('${c.id}')">${c.name}</button>`).join('')}</div>
   <div class="row between" style="padding:4px 18px 12px"><span class="small muted">Urutkan</span>
@@ -33,6 +33,9 @@ function viewCatalog(){
 Object.assign(App, {
   /* Perbarui hasil saja (bukan seluruh halaman) agar fokus input tidak hilang */
   search(v, fill){
+    v = Security.clean(v, Security.LIMITS.search);
+    const attack = Security.detect(v);
+    if(attack){ Security.logAttack(attack, 'pencarian katalog'); toast('Kata kunci tidak valid'); v = ''; const q = $('#q'); if(q) q.value = ''; }
     S.q = v;
     if(fill){ const q = $('#q'); if(q){ q.value = v; q.focus(); } }
     const sg = $('#sugg'); if(sg) sg.hidden = !!v;

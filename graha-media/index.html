@@ -2,6 +2,9 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<!-- Keamanan: batasi sumber skrip/gaya/gambar (Content Security Policy) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Pemesanan jasa print Graha Media: unggah PDF, cek kelayakan, simulasi cetak, dan estimasi harga.">
 <title>Graha Media — Studio Cetak</title>
@@ -39,6 +42,7 @@
 <script src="js/data/tariff.js"></script>
 <!-- 2. Inti -->
 <script src="js/core/utils.js"></script>
+<script src="js/core/security.js"></script>
 <script src="js/core/store.js"></script>
 <script src="js/core/state.js"></script>
 <!-- 3. Fitur -->
@@ -62,6 +66,7 @@
 <script src="js/admin/admin-orders.js"></script>
 <script src="js/admin/admin-catalog.js"></script>
 <script src="js/admin/admin-tariff.js"></script>
+<script src="js/admin/admin-security.js"></script>
 <!-- 6. Animasi, router, mulai -->
 <script src="js/core/animations.js"></script>
 <script src="js/core/router.js"></script>

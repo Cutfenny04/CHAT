@@ -103,8 +103,8 @@ function flowConfirm(){
     ${f.note ? `<p class="small mt"><b>Catatan:</b> ${esc(f.note)}</p>` : ''}
     <div class="ntotal"><span style="font-weight:700">Estimasi total</span><b>${rp(est.total)}</b></div>
   </div>
-  <div class="field"><label for="nm">Nama</label><input class="inp" id="nm" value="${esc(me.name)}"></div>
-  <div class="field"><label for="wn">No. WhatsApp</label><input class="inp" id="wn" inputmode="tel" value="${esc(me.wa)}"></div>
+  <div class="field"><label for="nm">Nama</label><input class="inp" id="nm" maxlength="60" value="${esc(me.name)}"></div>
+  <div class="field"><label for="wn">No. WhatsApp</label><input class="inp" id="wn" maxlength="16" inputmode="tel" value="${esc(me.wa)}"></div>
   <label class="toggle mt"><input type="checkbox" id="agree" ${f.agreed ? 'checked' : ''} onchange="App.agree(this.checked)"> Saya paham harga ini estimasi dan bisa berbeda dari harga akhir di toko.</label>
   <button class="btn btn-berry btn-block mt" id="sendbtn" ${f.agreed ? '' : 'disabled'} onclick="App.submit()">Kirim Pesanan</button>
   </div>`;
@@ -136,6 +136,8 @@ Object.assign(App, {
     f.error = '';
     if(!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf'){ f.error = 'File harus berformat PDF.'; return render(true); }
     if(file.size > CONFIG.MAX_MB*1024*1024){ f.error = `Ukuran file ${(file.size/1048576).toFixed(1).replace('.',',')} MB melebihi batas ${CONFIG.MAX_MB} MB.`; return render(true); }
+    // Keamanan: cek isi file benar-benar PDF (bukan hanya ekstensi .pdf)
+    if(!(await Security.isRealPdf(file))){ Security.log('File bukan PDF asli ditolak', Security.safeFileName(file.name)); f.error = 'Isi file bukan PDF yang valid. Ekspor ulang dokumen ke PDF.'; return render(true); }
     const t0 = performance.now();
     f.loading = { done:0, total:0, label:'Menyiapkan pembaca PDF…' }; render(true);
     try{ finishAnalysis(await readPdf(file, setProgress), t0); }
@@ -166,23 +168,29 @@ Object.assign(App, {
   },
   agree(v){ S.flow.agreed = v; $('#sendbtn').disabled = !v; },
   submit(){
+    if(!requireRole('mahasiswa')) return;
     const f = S.flow, est = estimate(f), me = Store.session();
-    const name = $('#nm').value.trim() || me.name, waNum = $('#wn').value.trim();
-    if(!/^\+?\d[\d\s-]{8,}$/.test(waNum)){ toast('Periksa lagi nomor WhatsApp-mu'); $('#wn').focus(); return; }
+    const c = Security.check({
+      name:{ value:$('#nm').value, rule:'name', label:'Nama' },
+      wa:{ value:$('#wn').value.replace(/[\s-]/g, ''), rule:'wa', label:'No. WhatsApp' },
+      note:{ value:f.note, max:Security.LIMITS.note, required:false, label:'Catatan' }
+    }, 'pesanan');
+    if(!c.ok){ toast(Object.values(c.errors)[0]); return; }
+    const { name, wa:waNum, note } = c.values;
     Store.updateProfile({ name, wa:waNum });
     const now = Date.now();
     const order = {
       code:Store.nextCode(), createdAt:now, email:me.email, customer:{ name, wa:waNum },
-      product:f.product, file:{ name:f.file.name, pages:f.file.pages, mb:f.file.mb },
+      product:f.product, file:{ name:Security.safeFileName(f.file.name), pages:f.file.pages, mb:f.file.mb },
       config:{ ...f.config }, copies:f.copies, sheets:est.sheets, sidesN:est.sidesN,
-      finishing:{ jilid:f.jilid, laminasi:f.laminasi, potong:f.potong }, note:f.note,
+      finishing:{ jilid:f.jilid, laminasi:f.laminasi, potong:f.potong }, note,
       est:{ total:est.total, lines:est.lines.map(l => ({ label:l.label, sub:l.sub, amount:l.amount })) },
       color:{ colN:est.colN, bwN:est.bwN, maxPct:est.maxPct },
       check:{ score:f.checks.score, total:f.checks.total, issues:checkIssues(f) },
       thumbs:f.pages.slice(0, 8).map(p => p.thumb), reorderOf:f.reorderOf,
       status:'Belum selesai', history:[{ at:now, status:'Belum selesai', by:'Sistem' }]
     };
-    Store.addOrder(order);
+    if(!Store.addOrder(order)) return;
     f.done = order; render(); window.scrollTo(0, 0);
   }
 });

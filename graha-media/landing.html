@@ -2,6 +2,9 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<!-- Keamanan: batasi sumber skrip/gaya/gambar (Content Security Policy) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Graha Media: cetak tugas kuliah tanpa tebak-tebakan. Unggah PDF, cek kelayakan, lihat simulasi cetak, dan tahu estimasi harga sebelum kirim.">
 <title>Graha Media — Cetak tanpa tebak-tebakan</title>
@@ -267,6 +270,7 @@
 <script src="js/data/products.js"></script>
 <script src="js/data/tariff.js"></script>
 <script src="js/core/utils.js"></script>
+<script src="js/core/security.js"></script>
 <script src="js/core/store.js"></script>
 <script src="js/core/animations.js"></script>
 <script src="js/landing.js"></script>

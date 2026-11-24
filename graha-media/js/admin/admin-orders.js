@@ -23,7 +23,7 @@ function viewAdminOrders(){
     </div>
     <div class="toolbar reveal">
       <div class="seg" style="min-width:300px">${views.map(([v, l, i]) => `<button class="${S.admView === v ? 'on' : ''}" onclick="App.admView('${v}')" style="display:flex;gap:6px;align-items:center;justify-content:center">${i.replace('<svg', '<svg width="16" height="16"')}${l}</button>`).join('')}</div>
-      ${S.admView === 'busy' ? '' : `<div class="searchbox">${I.search}<label class="sr" for="aq">Cari pesanan</label><input id="aq" type="search" placeholder="Cari kode, nama, atau file…" value="${esc(S.admQ)}" oninput="App.admQ(this.value)"></div>`}
+      ${S.admView === 'busy' ? '' : `<div class="searchbox">${I.search}<label class="sr" for="aq">Cari pesanan</label><input id="aq" type="search" maxlength="60" placeholder="Cari kode, nama, atau file…" value="${esc(S.admQ)}" oninput="App.admQ(this.value)"></div>`}
       ${S.admView === 'list' ? `<div class="seg">${['Belum selesai','Selesai','Semua'].map(s => `<button class="${S.admFilter === s ? 'on' : ''}" onclick="App.admFilter('${s}')">${s}</button>`).join('')}</div>` : ''}
     </div>
     ${S.admView === 'board' ? boardView(all) : S.admView === 'busy' ? busyView(all) : listView(all)}`);
@@ -122,8 +122,9 @@ Object.assign(App, {
   sel(code){ S.admSel = code; render(true); if(window.innerWidth < 768){ const d = $('.dpanel'); d && d.scrollIntoView({ behavior: RM ? 'auto' : 'smooth' }); } },
   admView(v){ S.admView = v; render(true); initFx(false); },
   admFilter(s){ S.admFilter = s; render(true); },
-  admQ(v){ S.admQ = v; render(true); const el = $('#aq'); if(el){ el.focus(); el.setSelectionRange(v.length, v.length); } },
+  admQ(v){ v = Security.clean(v, Security.LIMITS.search); const attack = Security.detect(v); if(attack){ Security.logAttack(attack, 'pencarian admin'); v = ''; } S.admQ = v; render(true); const el = $('#aq'); if(el){ el.focus(); el.setSelectionRange(v.length, v.length); } },
   setStatus(code, status){
+    if(!requireRole('admin')) return;
     Store.updateStatus(code, status, Store.session().name);
     toast(`${code} ditandai ${status}`); render(true);
   },
@@ -137,7 +138,7 @@ Object.assign(App, {
   dragOver(e){ e.preventDefault(); e.currentTarget.classList.add('over'); },
   drop(e, status){
     e.preventDefault(); e.currentTarget.classList.remove('over');
-    const code = e.dataTransfer.getData('text/plain'), o = Store.order(code);
+    const code = Security.clean(e.dataTransfer.getData('text/plain'), 20), o = Store.order(code);
     if(o && o.status !== status) App.setStatus(code, status);
   }
 });
