@@ -1,0 +1,27 @@
+/* =========================================================
+   animations.css — animasi scroll & mikro-interaksi (PRD bagian 8)
+   Kelas .reveal / .tilt diberi .in oleh js/core/animations.js
+   ========================================================= */
+.js .reveal{opacity:0;transform:translateY(22px);transition:opacity .5s ease-out,transform .55s cubic-bezier(.2,.8,.2,1)}
+.js .reveal.in{opacity:1;transform:none}
+.js .tilt{opacity:0;transform:translateY(28px) rotate(var(--rot,-2deg));transition:opacity .45s ease-out,transform .5s cubic-bezier(.2,.8,.2,1)}
+.js .tilt.in{opacity:1;transform:rotate(calc(var(--rot,-2deg) * .35))}
+.js .tilt.in:hover{transform:rotate(0) translateY(-3px)}
+
+@keyframes pulse{from{transform:scale(.6);opacity:1}to{transform:scale(1.6);opacity:0}}
+@keyframes tick{to{transform:translateX(-50%)}}
+@keyframes sew{50%{transform:translateY(8px) rotate(-6deg)}}
+@keyframes sheetIn{from{opacity:0;transform:perspective(900px) rotateY(-16deg) scale(.94)}to{opacity:1;transform:none}}
+@keyframes notaIn{from{transform:translateY(50px);opacity:0;clip-path:inset(0 0 100% 0)}to{transform:none;opacity:1;clip-path:inset(-20px 0 -20px 0)}}
+@keyframes stampIn{from{opacity:0;transform:translateY(30px) rotate(-3deg)}to{opacity:1;transform:rotate(-1deg)}}
+@keyframes capIn{from{opacity:0;transform:scale(2.2) rotate(-30deg)}to{opacity:.85;transform:rotate(-14deg)}}
+@keyframes pop{from{transform:scale(0) rotate(-30deg)}to{transform:scale(1) rotate(8deg)}}
+@keyframes modalIn{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:none}}
+
+/* Pengguna yang memilih "kurangi gerakan" */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.12s!important}
+  .js .reveal,.js .tilt{transform:none!important}
+  .ticker .track{animation:none}
+}

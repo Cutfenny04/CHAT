@@ -1,0 +1,106 @@
+/* =========================================================
+   admin.css — tampilan admin/owner (iPad & web)
+   sidebar, statistik, daftar/detail, papan kanban, mode sibuk,
+   tabel katalog & tarif, modal form
+   ========================================================= */
+body.admin{background:var(--snow)}
+.adm{display:grid;grid-template-columns:236px 1fr;min-height:calc(100vh - 34px)}
+.side{color:var(--paper);padding:24px 16px;position:sticky;top:34px;height:calc(100vh - 34px);display:flex;flex-direction:column;gap:20px;overflow:hidden}
+.side .lace{position:absolute;right:0;top:0;bottom:0;width:22px;opacity:.6;background-size:22px 26px}
+.side .brand{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.05}
+.side .brand small{display:block;font-style:italic;font-weight:500;font-size:12px;color:var(--frost)}
+.side nav{display:flex;flex-direction:column;gap:6px}
+.side a,.side button.lo{display:flex;gap:10px;align-items:center;padding:12px;border-radius:12px;min-height:46px;font-weight:600;font-size:14px;opacity:.8;text-align:left}
+.side a.on{opacity:1;background:rgba(246,244,241,.12);outline:1.5px dashed rgba(246,244,241,.35);outline-offset:-1px}
+.side a svg,.side button.lo svg{width:20px;height:20px}
+.side .who{margin-top:auto;font-size:12px;opacity:.8}
+.main{padding:26px clamp(16px,3vw,34px) 40px;min-width:0}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.stat{background:var(--paper);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat b{font-family:var(--serif);font-size:38px;line-height:1.1;display:block;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--branch);font-weight:600}
+.stat.hot b{color:var(--berry)}
+.stat::after{content:'';position:absolute;right:-14px;top:-14px;width:64px;height:64px;border-radius:50%;border:2px dashed var(--frost)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:22px 0 14px}
+.toolbar .searchbox{margin:0;flex:1;min-width:220px}
+.toolbar .seg{min-width:260px}
+
+/* Daftar + detail */
+.split{display:grid;grid-template-columns:minmax(280px,38%) 1fr;gap:18px;align-items:start}
+.olist{display:flex;flex-direction:column;gap:10px}
+.ocard{background:var(--paper);border-radius:16px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:3px 10px;border:2px solid transparent;text-align:left;width:100%;box-shadow:0 8px 18px -16px rgba(39,54,63,.8);transition:border-color .2s,transform .2s}
+.ocard:hover{transform:translateX(3px)}
+.ocard.on{border-color:var(--pine)}
+.ocard .c{font-family:var(--serif);font-weight:700;font-size:17px}
+.ocard .m{font-size:12.5px;color:var(--branch);grid-column:1/-1}
+.sbadge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap;height:fit-content}
+.sbadge svg{width:13px;height:13px}
+.sbadge.p{background:var(--mist);color:var(--pine)}
+.sbadge.d{background:var(--pine);color:var(--paper)}
+.dpanel{background:var(--paper);border-radius:22px;padding:22px;position:sticky;top:54px;box-shadow:var(--shadow)}
+.dpanel h2{font-family:var(--serif);font-size:30px;line-height:1.05}
+.dsec{margin-top:18px;padding-top:16px;border-top:2px dashed var(--snow)}
+.dsec h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--branch);margin-bottom:10px}
+.cfg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cfg div{background:var(--snow);border-radius:12px;padding:9px 11px}
+.cfg small{display:block;font-size:10.5px;color:var(--branch);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.cfg b{font-size:14px}
+.thumbrow{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.thumbrow img,.thumbrow .tph{height:96px;border:1px solid var(--snow);border-radius:4px;background:#fff;box-shadow:0 6px 10px -8px rgba(39,54,63,.7)}
+.thumbrow .tph{width:68px;display:grid;place-items:center}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.hist{font-size:13px;color:var(--branch);display:flex;flex-direction:column;gap:4px}
+
+/* Papan kanban */
+.board{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.col{background:rgba(246,244,241,.55);border:2px dashed var(--frost);border-radius:22px;padding:14px;min-height:300px;transition:background .2s,border-color .2s}
+.col.over{background:var(--paper);border-color:var(--berry)}
+.col h3{font-family:var(--serif);font-size:20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.col h3 span{font-family:var(--sans);font-size:12px;background:var(--pine);color:var(--paper);border-radius:99px;padding:2px 10px}
+.kcard{background:var(--paper);border-radius:14px;padding:12px 14px;box-shadow:0 8px 18px -14px rgba(39,54,63,.8);margin-bottom:10px;cursor:grab;display:flex;flex-direction:column;gap:3px;border-left:4px solid var(--mist)}
+.kcard.d{border-left-color:var(--pine)}
+.kcard.dragging{opacity:.4}
+.kcard .c{font-family:var(--serif);font-weight:700;font-size:17px}
+
+/* Mode sibuk */
+.busygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.bcard{background:var(--paper);border-radius:20px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;transition:opacity .35s,transform .35s}
+.bcard.leaving{opacity:0;transform:scale(.9) rotate(2deg)}
+.bcard .c{font-family:var(--serif);font-size:26px;font-weight:700}
+.bcard .btn{min-height:58px;font-size:17px;margin-top:8px}
+
+/* Tabel */
+.tblwrap{overflow-x:auto;border-radius:18px;box-shadow:var(--shadow)}
+.tbl{width:100%;border-collapse:collapse;background:var(--paper);font-size:14px;min-width:760px}
+.tbl th{background:var(--pine);color:var(--paper);text-align:left;padding:12px 14px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.tbl td{padding:12px 14px;border-top:1.5px dashed var(--snow);vertical-align:middle}
+.tbl td.num{font-variant-numeric:tabular-nums;font-weight:700}
+.tbl tr.off td{opacity:.5}
+.tbl .inp{min-height:40px;padding:8px 10px;font-size:14px;max-width:140px}
+.tbl select.inp{max-width:160px}
+
+/* Modal form produk */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(39,54,63,.55);display:grid;place-items:center;padding:20px;overflow-y:auto}
+.modal .box{background:var(--paper);border-radius:24px;padding:24px;width:min(100%,720px);box-shadow:0 30px 60px -20px rgba(0,0,0,.5);animation:modalIn .35s cubic-bezier(.2,.8,.2,1)}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.formgrid .full{grid-column:1/-1}
+.ferr{color:var(--berry);font-size:12px;font-weight:600;margin-top:4px}
+
+@media (max-width:1023px){
+  .adm{grid-template-columns:1fr}
+  .side{height:auto;flex-direction:row;align-items:center;padding:12px 16px;z-index:30;gap:14px;overflow-x:auto}
+  .side nav{flex-direction:row}
+  .side a{padding:9px 12px;min-height:44px}
+  .side .who,.side .lace{display:none}
+  .cfg{grid-template-columns:repeat(2,1fr)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:767px){
+  .split,.board,.formgrid{grid-template-columns:1fr}
+  .dpanel{position:static}
+  .stat b{font-size:30px}
+  .side .brand small{display:none}
+  .side a span,.side button.lo span{display:none}
+}

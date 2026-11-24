@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Graha Media — Studio Cetak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  Prototype website pemesanan print Graha Media (sesuai PRD).
+  - Sisi mahasiswa: mobile-first (HP). Sisi admin: iPad / web (#/admin).
+  - Smart Print Check & Peta Warna benar-benar menganalisis PDF di browser (PDF.js dari CDN, butuh internet).
+    Tanpa internet, pakai tombol "Coba dengan file contoh".
+  - Data pesanan disimpan di localStorage browser (pengganti backend selama prototype).
+  - Ganti WA_TOKO di bagian <script> dengan nomor WhatsApp toko yang asli.
+-->
+<style>
+:root{
+  --snow:#DCE0E8; --mist:#8EA1AE; --pine:#27363F; --berry:#6B212C; --branch:#685652; --frost:#BEB3AC;
+  --paper:#F6F4F1;
+  --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --shadow:0 12px 30px -16px rgba(39,54,63,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--snow);color:var(--pine);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+svg{flex:none}
+:focus-visible{outline:2px solid var(--berry);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- Bar pratinjau (untuk demo) ---------- */
+#demobar{position:sticky;top:0;z-index:70;height:34px;display:flex;gap:8px;align-items:center;justify-content:center;background:var(--pine);color:var(--snow);font-size:12px}
+#demobar button{padding:3px 12px;border-radius:99px;border:1px dashed rgba(220,224,232,.5);font-size:12px}
+#demobar button.on{background:var(--snow);color:var(--pine);border-style:solid}
+
+/* ---------- Pola & tekstur ---------- */
+.denim{background-color:var(--pine);background-image:repeating-linear-gradient(135deg,rgba(220,224,232,.07) 0 1px,transparent 1px 4px),repeating-linear-gradient(45deg,rgba(0,0,0,.2) 0 1px,transparent 1px 5px)}
+.pat-polka{background-color:var(--frost);background-image:radial-gradient(var(--paper) 2px,transparent 2.5px);background-size:16px 16px}
+.pat-berrydot{background-color:var(--berry);background-image:radial-gradient(rgba(246,244,241,.85) 1.5px,transparent 2px);background-size:14px 14px}
+.pat-gingham{background-color:var(--paper);background-image:linear-gradient(90deg,rgba(39,54,63,.2) 50%,transparent 50%),linear-gradient(rgba(39,54,63,.2) 50%,transparent 50%);background-size:24px 24px}
+.pat-stripe{background-color:var(--snow);background-image:repeating-linear-gradient(90deg,rgba(142,161,174,.6) 0 8px,transparent 8px 16px)}
+.lace{background-color:rgba(246,244,241,.1);background-size:34px 40px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='40' viewBox='0 0 34 40'%3E%3Cg fill='none' stroke='%23F6F4F1' stroke-width='1.3' opacity='.85'%3E%3Ccircle cx='17' cy='20' r='8'/%3E%3Ccircle cx='17' cy='20' r='3.5'/%3E%3Cpath d='M1 0q8 10 0 20q8 10 0 20'/%3E%3Cpath d='M33 0q-8 10 0 20q-8 10 0 20'/%3E%3C/g%3E%3Cg fill='%23F6F4F1'%3E%3Ccircle cx='17' cy='3' r='1.6'/%3E%3Ccircle cx='17' cy='37' r='1.6'/%3E%3C/g%3E%3C/svg%3E")}
+
+/* ---------- Kerangka mahasiswa (HP) ---------- */
+.phone{max-width:440px;margin:0 auto;min-height:calc(100vh - 34px);background:var(--snow);position:relative;padding-bottom:110px;overflow-x:clip}
+@media (min-width:600px){
+  body.student{background-color:var(--frost);background-image:radial-gradient(rgba(246,244,241,.65) 1.6px,transparent 2px);background-size:22px 22px}
+  .phone{box-shadow:0 30px 80px -30px rgba(39,54,63,.55)}
+}
+.hdr{position:sticky;top:34px;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(220,224,232,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:padding .2s,box-shadow .2s}
+.hdr.shrink{padding:8px 18px;box-shadow:0 8px 20px -14px rgba(39,54,63,.6)}
+.logo{font-family:var(--serif);font-weight:700;font-size:21px;line-height:1.05}
+.logo small{display:block;font-style:italic;font-weight:500;font-size:12px;color:var(--branch);transition:opacity .2s,height .2s}
+.hdr.shrink .logo small{opacity:0;height:0}
+.hdr-actions{display:flex;gap:8px}
+.iconbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--paper);border:1.5px dashed var(--frost)}
+.iconbtn svg{width:20px;height:20px}
+
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,440px);z-index:45;display:grid;grid-template-columns:repeat(4,1fr);background:var(--pine);color:var(--snow);padding:8px 8px calc(8px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:500;padding:7px 4px;border-radius:14px;opacity:.72;transition:background .2s,opacity .2s}
+.bnav a.on{opacity:1;background:rgba(220,224,232,.13)}
+.bnav svg{width:22px;height:22px}
+
+.wa{position:fixed;right:max(14px,calc(50% - 206px));bottom:86px;z-index:46;display:flex;align-items:center;gap:8px;background:var(--berry);color:var(--paper);padding:12px 16px 12px 13px;border-radius:99px;box-shadow:0 14px 26px -12px rgba(107,33,44,.9);font-weight:600;font-size:14px;outline:1.5px dashed rgba(246,244,241,.5);outline-offset:-6px;transition:transform .2s}
+.wa:hover{transform:translateY(-2px)}
+.wa svg{width:20px;height:20px}
+
+/* ---------- Tipografi & umum ---------- */
+.sec{padding:22px 18px}
+.h1{font-family:var(--serif);font-size:30px;line-height:1.1;font-weight:700}
+.h2{font-family:var(--serif);font-size:25px;line-height:1.15;font-weight:700}
+.h1 em,.h2 em{font-style:italic;color:var(--berry);font-weight:500}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--branch);font-weight:700;margin-bottom:6px}
+.muted{color:var(--branch)}
+.small{font-size:13px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:12px}
+.mt{margin-top:14px}
+.card{background:var(--paper);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:14px;font-weight:600;min-height:48px;transition:transform .15s,background .2s,opacity .2s;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn svg{width:18px;height:18px}
+.btn-berry{background:var(--berry);color:var(--paper);box-shadow:0 10px 20px -12px rgba(107,33,44,.9)}
+.btn-pine{background:var(--pine);color:var(--paper)}
+.btn-paper{background:var(--paper);color:var(--pine)}
+.btn-ghost{border:1.5px dashed var(--mist);color:var(--pine);background:transparent}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.42;pointer-events:none}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;width:fit-content;white-space:nowrap}
+.b-ok{background:var(--pine);color:var(--paper)}
+.b-sim{border:1px dashed var(--branch);color:var(--branch)}
+.b-warn{background:var(--berry);color:var(--paper)}
+.b-mist{background:var(--mist);color:var(--pine)}
+.price{font-weight:700;color:var(--berry);font-variant-numeric:tabular-nums}
+.stitch{border:0;border-top:2px dashed var(--frost);margin:6px 18px}
+.stitch-draw{height:2px;margin:10px 18px;background-image:linear-gradient(90deg,var(--branch) 60%,transparent 0);background-size:12px 2px;clip-path:inset(0 100% 0 0)}
+.patch{filter:drop-shadow(0 6px 8px rgba(39,54,63,.3))}
+
+/* ---------- Beranda ---------- */
+.hero{margin:6px 14px 0;border-radius:26px;position:relative;overflow:hidden;color:var(--paper);padding:28px 22px 26px 66px;min-height:320px}
+.hero .lace{position:absolute;top:-80px;bottom:-80px;left:16px;width:34px;will-change:transform;border-left:1.5px dashed rgba(246,244,241,.35);border-right:1.5px dashed rgba(246,244,241,.35)}
+.hero h1{font-family:var(--serif);font-size:35px;line-height:1.06;font-weight:700}
+.hero h1 em{font-style:italic;font-weight:500;color:var(--frost)}
+.hero p{opacity:.86;margin:12px 0 20px;font-size:15px;max-width:30ch}
+.hero .patch{position:absolute;right:16px;bottom:14px;transform:rotate(12deg)}
+.hero .eyebrow{color:var(--frost)}
+.busy{margin:14px 14px 0;display:flex;gap:10px;align-items:center;padding:11px 14px;border-radius:14px;background:var(--paper);border:1.5px dashed var(--mist);font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--pine);flex:none;position:relative}
+.dot.hot{background:var(--berry)}
+.dot.hot::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--berry);animation:pulse 1.6s infinite}
+@keyframes pulse{from{transform:scale(.6);opacity:1}to{transform:scale(1.6);opacity:0}}
+.ticker{overflow:hidden;white-space:nowrap;padding:12px 0;margin:22px -10px 0;background:var(--berry);color:var(--paper);transform:rotate(-1.6deg)}
+.ticker .track{display:inline-flex;gap:26px;animation:tick 24s linear infinite;font-family:var(--serif);font-style:italic;font-size:17px}
+.ticker.rev .track{animation-direction:reverse}
+@keyframes tick{to{transform:translateX(-50%)}}
+.folders{display:grid;gap:22px;margin-top:22px}
+.folder{position:relative;border-radius:4px 18px 18px 18px;padding:18px 18px 18px;box-shadow:var(--shadow);background:var(--paper)}
+.folder::before{content:'';position:absolute;top:-14px;left:0;width:44%;height:16px;background:inherit;border-radius:10px 16px 0 0}
+.folder.f2{background:var(--frost)}
+.folder.f3{background:var(--mist)}
+.folder .tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.8}
+.folder h3{font-family:var(--serif);font-size:21px;margin:3px 0 4px}
+.folder p{font-size:14px}
+.folder .clip{position:absolute;right:14px;top:-10px;width:28px;height:28px;color:var(--branch)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 18px 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:9px 14px;border-radius:99px;background:var(--paper);border:1.5px dashed var(--frost);font-size:14px;font-weight:500;white-space:nowrap;min-height:42px}
+.chip.on{background:var(--pine);color:var(--paper);border:1.5px solid var(--pine)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 18px}
+.pcard{background:var(--paper);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.art{aspect-ratio:4/3;position:relative;display:grid;place-items:center}
+.mini{width:40%;aspect-ratio:1/1.41;background:#fff;border-radius:3px;box-shadow:0 10px 16px -8px rgba(39,54,63,.65);padding:9% 8%;display:flex;flex-direction:column;gap:7%;transform:rotate(-4deg);position:relative}
+.mini span{font-size:9px;font-weight:700;color:var(--branch);line-height:1}
+.mini i{height:4px;border-radius:2px;background:var(--snow)}
+.mini i.s{width:60%}
+.mini b{flex:1;border-radius:3px;background:linear-gradient(135deg,var(--berry),var(--mist))}
+.mini.jilid{border-left:6px solid var(--pine)}
+.mini.finishing{outline:2px dashed var(--berry);outline-offset:4px}
+.pcard .body{padding:10px 12px 13px;display:flex;flex-direction:column;gap:3px;flex:1}
+.pcard h3{font-size:14px;font-weight:700;line-height:1.25}
+.pcard .sd{font-size:12px;color:var(--branch);line-height:1.35}
+.pcard .price{font-size:14px;margin-top:auto;padding-top:6px}
+.pcard .lead{font-size:11px;color:var(--branch)}
+.steps{position:relative;padding-left:44px;margin-top:18px;display:flex;flex-direction:column;gap:20px}
+.steps::before{content:'';position:absolute;left:17px;top:8px;bottom:8px;border-left:2px dashed var(--frost)}
+.steps .fill{position:absolute;left:17px;top:8px;width:2px;background:var(--berry);height:0;max-height:calc(100% - 16px)}
+.steps li{list-style:none;position:relative}
+.steps li::before{content:attr(data-n);position:absolute;left:-44px;top:0;width:36px;height:36px;border-radius:50%;background:var(--paper);border:2px dashed var(--branch);display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:15px}
+.steps b{font-family:var(--serif);font-size:18px;display:block}
+.steps span{font-size:14px;color:var(--branch)}
+.foot{margin:30px 14px 0;border-radius:24px;color:var(--paper);padding:22px;position:relative;overflow:hidden}
+.foot .lace{position:absolute;right:16px;top:0;bottom:0;width:30px}
+.foot p{font-size:13px;opacity:.82;max-width:30ch}
+
+/* ---------- Katalog & pencarian ---------- */
+.searchbox{display:flex;align-items:center;gap:8px;margin:4px 18px 12px;background:var(--paper);border-radius:16px;padding:4px 6px 4px 14px;box-shadow:var(--shadow);border:1.5px solid transparent}
+.searchbox:focus-within{border-color:var(--pine)}
+.searchbox svg{width:20px;height:20px;color:var(--branch)}
+.searchbox input{flex:1;border:0;background:none;padding:11px 0;outline:none;font-size:16px;min-width:0}
+.sortsel{border:1.5px dashed var(--frost);background:var(--paper);border-radius:12px;padding:8px 10px;font-size:13px}
+.empty{text-align:center;padding:30px 18px}
+.empty .patch{margin:0 auto 10px}
+
+/* ---------- Detail produk ---------- */
+.detail-art{margin:6px 14px 0;border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
+.detail-art .art{aspect-ratio:16/11}
+.detail-art .mini{width:30%}
+.spec{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;font-size:14px}
+.spec dt{color:var(--branch)}
+.spec dd{font-weight:600}
+
+/* ---------- Alur pesan ---------- */
+.stepper{display:flex;justify-content:space-between;position:relative;margin:6px 26px 4px}
+.stepper::before{content:'';position:absolute;left:12px;right:12px;top:12px;border-top:2px dashed var(--frost)}
+.stepper .prog{position:absolute;left:12px;top:11px;height:2px;background:var(--berry);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.stepper .node{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--branch);width:24px}
+.stepper .node i{width:26px;height:26px;border-radius:50%;background:var(--snow);border:2px dashed var(--branch);display:grid;place-items:center;font-style:normal;font-size:11px}
+.stepper .node.done i{background:var(--berry);border:2px solid var(--berry);color:var(--paper)}
+.stepper .node.cur i{background:var(--pine);border:2px solid var(--pine);color:var(--paper)}
+.stepper .node span{white-space:nowrap}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--branch);padding:8px 0;min-height:44px}
+.back svg{width:18px;height:18px}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed var(--mist);border-radius:22px;padding:34px 18px;text-align:center;background:var(--paper);position:relative;cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover{border-color:var(--pine)}
+.drop svg{width:34px;height:34px;color:var(--berry)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.or{text-align:center;font-size:12px;color:var(--branch);margin:14px 0;display:flex;align-items:center;gap:10px}
+.or::before,.or::after{content:'';flex:1;border-top:1.5px dashed var(--frost)}
+.alert{padding:11px 13px;border-radius:12px;background:rgba(107,33,44,.08);border-left:3px solid var(--berry);font-size:13px}
+.alert.info{background:rgba(39,54,63,.06);border-left-color:var(--pine)}
+.loader{text-align:center}
+.needle{width:64px;height:64px;margin:6px auto 12px;color:var(--berry);animation:sew 1s ease-in-out infinite}
+@keyframes sew{50%{transform:translateY(8px) rotate(-6deg)}}
+.bar{height:8px;border-radius:99px;background:var(--snow);overflow:hidden;margin:14px 0 8px}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--berry) 0 10px,#8a3341 10px 14px);border-radius:99px;transition:width .2s}
+.filebox{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--snow)}
+.filebox svg{width:28px;height:28px;color:var(--berry)}
+.filebox b{display:block;font-size:14px;word-break:break-all}
+.score{display:flex;align-items:center;gap:14px;margin:16px 0 6px}
+.score svg{width:72px;height:72px}
+.score b{font-family:var(--serif);font-size:28px;display:block;line-height:1}
+.crow{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1.5px dashed var(--snow)}
+.crow .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none}
+.crow .ic svg{width:17px;height:17px}
+.crow.ok .ic{background:var(--pine);color:var(--paper)}
+.crow.warn .ic{background:var(--berry);color:var(--paper)}
+.crow.soon .ic{background:var(--snow);color:var(--branch)}
+.crow h4{font-size:14px}
+.crow p{font-size:13px;color:var(--branch)}
+.crow .st{margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;flex:none}
+.crow.ok .st{background:var(--snow);color:var(--pine)}
+.crow.warn .st{background:var(--berry);color:var(--paper)}
+.crow.soon .st{border:1px dashed var(--branch);color:var(--branch)}
+.pl{display:inline-flex;align-items:center;padding:3px 9px;border-radius:8px;background:var(--snow);font-size:12px;font-weight:700;margin:6px 6px 0 0;min-height:30px}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-top:8px;min-height:36px;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--berry)}
+
+.simstage{border-radius:22px;padding:24px 14px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:inset 0 0 0 1px rgba(39,54,63,.06)}
+.sheet{background:#fff;box-shadow:0 22px 30px -18px rgba(39,54,63,.75),0 0 0 1px rgba(39,54,63,.08);position:relative;overflow:hidden;display:flex;gap:3%;padding:4%;animation:sheetIn .45s cubic-bezier(.2,.8,.2,1);max-width:100%}
+.sheet.col{flex-direction:column}
+.slot{flex:1;position:relative;overflow:hidden;display:grid;place-items:center;min-width:0;min-height:0}
+.slot img.fit{width:100%;height:100%;object-fit:contain}
+.slot img.actual{position:absolute;top:0;left:50%;transform:translateX(-50%);max-width:none;height:auto}
+.slot .ph{width:100%;height:100%;background:repeating-linear-gradient(180deg,var(--snow) 0 4px,transparent 4px 12px);opacity:.6}
+.slot .pno{position:absolute;bottom:2px;right:4px;font-size:9px;color:var(--branch);background:rgba(255,255,255,.85);padding:0 4px;border-radius:4px}
+.sheet .flag{position:absolute;inset:0;border:2px dashed var(--berry);pointer-events:none}
+@keyframes sheetIn{from{opacity:0;transform:perspective(900px) rotateY(-16deg) scale(.94)}to{opacity:1;transform:none}}
+.simnav{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600}
+.simnav button{width:44px;height:44px;border-radius:50%;background:var(--paper);display:grid;place-items:center;box-shadow:var(--shadow)}
+.simnav button svg{width:18px;height:18px}
+.simnav button[disabled]{opacity:.35}
+.field{margin-top:16px}
+.field>label,.field>.lbl{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--branch);margin-bottom:7px}
+.seg{display:flex;background:var(--snow);border-radius:13px;padding:4px;gap:4px}
+.seg button{flex:1;padding:9px 6px;border-radius:10px;font-size:13px;font-weight:600;min-height:42px;transition:background .2s,color .2s}
+.seg button.on{background:var(--pine);color:var(--paper)}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.summary div{background:var(--snow);border-radius:12px;padding:9px 11px}
+.summary small{display:block;font-size:10.5px;color:var(--branch);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.summary b{font-size:14px}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:44px;height:44px;border-radius:12px;background:var(--snow);font-size:20px;font-weight:700}
+.qty output{min-width:40px;text-align:center;font-weight:700;font-size:18px}
+textarea,.inp{width:100%;border:1.5px dashed var(--frost);background:#fff;border-radius:14px;padding:11px 13px;font-size:16px;outline:none}
+textarea:focus,.inp:focus{border-color:var(--pine);border-style:solid}
+.note{font-size:12px;color:var(--branch);font-style:italic}
+
+.cmap{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 10px;margin-top:14px}
+.cside{background:#fff;border-radius:12px;padding:16px 6px 7px;position:relative;box-shadow:0 8px 16px -12px rgba(39,54,63,.7);border:1.5px solid transparent}
+.cside.c{border-color:rgba(107,33,44,.25)}
+.cside .thumbs{display:flex;gap:3px;align-items:flex-start}
+.cside img{flex:1;min-width:0;border:1px solid var(--snow)}
+.cside .tagj{position:absolute;top:-8px;left:6px;background:var(--pine);color:var(--paper);font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;outline:1px dashed rgba(246,244,241,.6);outline-offset:-3px}
+.cside.c .tagj{background:var(--berry)}
+.cside.k .tagj{background:var(--mist);color:var(--pine)}
+.cside .cost{font-size:12px;font-weight:700;margin-top:6px;display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums}
+.cside .pn{font-size:10px;color:var(--branch);font-weight:600}
+.cside .bwbtn{margin-top:6px;width:100%;font-size:11px;font-weight:700;padding:6px 2px;border-radius:8px;background:var(--snow);min-height:32px}
+.cside .hrt{position:absolute;top:-10px;right:4px;width:20px;height:20px;color:var(--berry)}
+.insight{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--pine);color:var(--paper);font-size:13px}
+.insight svg{width:20px;height:20px;color:var(--frost)}
+.nota{background:#fff;margin:24px 4px 10px;padding:22px 18px 24px;position:relative;font-variant-numeric:tabular-nums;animation:notaIn .8s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 18px 30px -22px rgba(39,54,63,.8)}
+.nota::before,.nota::after{content:'';position:absolute;left:0;right:0;height:10px;background-repeat:repeat-x;background-size:14px 10px}
+.nota::before{top:-10px;background-image:radial-gradient(circle at 7px 0,transparent 6px,#fff 6.5px)}
+.nota::after{bottom:-10px;background-image:radial-gradient(circle at 7px 10px,transparent 6px,#fff 6.5px)}
+.nota h3{font-family:var(--serif);font-size:24px;text-align:center}
+.nota .meta{text-align:center;font-size:12px;color:var(--branch);margin-bottom:12px}
+.nline{display:flex;justify-content:space-between;gap:10px;padding:8px 0 2px;font-size:14px}
+.nsub{display:flex;justify-content:space-between;font-size:12px;color:var(--branch);padding-bottom:6px;border-bottom:1px dotted var(--frost)}
+.ntotal{display:flex;justify-content:space-between;align-items:baseline;border-top:2px dashed var(--pine);margin-top:10px;padding-top:12px}
+.ntotal b{font-family:var(--serif);font-size:30px;color:var(--berry)}
+@keyframes notaIn{from{transform:translateY(50px);opacity:0;clip-path:inset(0 0 100% 0)}to{transform:none;opacity:1;clip-path:inset(-20px 0 -20px 0)}}
+
+.stamp{padding:10px;background:radial-gradient(circle at center,transparent 5px,var(--paper) 5.5px) -8px -8px/16px 16px;filter:drop-shadow(0 14px 18px rgba(39,54,63,.35));animation:stampIn .7s cubic-bezier(.2,.8,.2,1) both}
+.stamp .inner{background:var(--paper);border:2px dashed var(--branch);padding:22px 18px;position:relative;text-align:center;overflow:hidden}
+.stamp .code{font-family:var(--serif);font-size:34px;font-weight:700;letter-spacing:.02em;margin:6px 0}
+.cap{position:absolute;right:10px;top:10px;width:78px;height:78px;border-radius:50%;border:2px solid var(--berry);color:var(--berry);display:grid;place-items:center;font-size:9px;font-weight:800;letter-spacing:.12em;text-align:center;line-height:1.2;transform:rotate(-14deg);opacity:.85;animation:capIn .5s .5s cubic-bezier(.2,.8,.2,1) both}
+.cap::before{content:'';position:absolute;inset:4px;border-radius:50%;border:1px dashed var(--berry)}
+@keyframes stampIn{from{opacity:0;transform:translateY(30px) rotate(-3deg)}to{opacity:1;transform:rotate(-1deg)}}
+@keyframes capIn{from{opacity:0;transform:scale(2.2) rotate(-30deg)}to{opacity:.85;transform:rotate(-14deg)}}
+
+.ocardS{background:var(--paper);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.track3{display:flex;align-items:center;margin:16px 4px 6px}
+.track3 .n{width:22px;height:22px;border-radius:50%;border:2px dashed var(--branch);background:var(--snow);flex:none;display:grid;place-items:center;color:var(--paper)}
+.track3 .n svg{width:12px;height:12px}
+.track3 .n.on{background:var(--berry);border:2px solid var(--berry)}
+.track3 .ln{flex:1;border-top:2px dashed var(--frost);position:relative}
+.track3 .ln i{position:absolute;left:0;top:-2px;height:2px;width:0;background:var(--berry);transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.track3 .ln.on i{width:100%}
+.tlabels{display:flex;justify-content:space-between;font-size:11px;color:var(--branch);font-weight:600}
+.done-heart{animation:pop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes pop{from{transform:scale(0) rotate(-30deg)}to{transform:scale(1) rotate(8deg)}}
+
+/* ---------- Admin (iPad / web) ---------- */
+body.admin{background:var(--snow)}
+.adm{display:grid;grid-template-columns:236px 1fr;min-height:calc(100vh - 34px)}
+.side{color:var(--paper);padding:24px 16px;position:sticky;top:34px;height:calc(100vh - 34px);display:flex;flex-direction:column;gap:20px;overflow:hidden}
+.side .lace{position:absolute;right:0;top:0;bottom:0;width:22px;opacity:.6;background-size:22px 26px}
+.side .brand{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.05}
+.side .brand small{display:block;font-style:italic;font-weight:500;font-size:12px;color:var(--frost)}
+.side nav{display:flex;flex-direction:column;gap:6px}
+.side a{display:flex;gap:10px;align-items:center;padding:12px;border-radius:12px;min-height:46px;font-weight:600;font-size:14px;opacity:.8}
+.side a.on{opacity:1;background:rgba(246,244,241,.12);outline:1.5px dashed rgba(246,244,241,.35);outline-offset:-1px}
+.side a svg{width:20px;height:20px}
+.side .who{margin-top:auto;font-size:12px;opacity:.75}
+.main{padding:26px clamp(16px,3vw,34px) 40px;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+.stat{background:var(--paper);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat b{font-family:var(--serif);font-size:40px;line-height:1.1;display:block;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--branch);font-weight:600}
+.stat.hot b{color:var(--berry)}
+.stat::after{content:'';position:absolute;right:-14px;top:-14px;width:64px;height:64px;border-radius:50%;border:2px dashed var(--frost)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:22px 0 14px}
+.toolbar .searchbox{margin:0;flex:1;min-width:220px}
+.toolbar .seg{min-width:280px}
+.split{display:grid;grid-template-columns:minmax(280px,38%) 1fr;gap:18px;align-items:start}
+.olist{display:flex;flex-direction:column;gap:10px}
+.ocard{background:var(--paper);border-radius:16px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:3px 10px;border:2px solid transparent;text-align:left;width:100%;box-shadow:0 8px 18px -16px rgba(39,54,63,.8);transition:border-color .2s,transform .2s}
+.ocard:hover{transform:translateX(3px)}
+.ocard.on{border-color:var(--pine)}
+.ocard .c{font-family:var(--serif);font-weight:700;font-size:17px}
+.ocard .m{font-size:12.5px;color:var(--branch);grid-column:1/-1}
+.sbadge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap;height:fit-content}
+.sbadge svg{width:13px;height:13px}
+.sbadge.p{background:var(--mist);color:var(--pine)}
+.sbadge.d{background:var(--pine);color:var(--paper)}
+.dpanel{background:var(--paper);border-radius:22px;padding:22px;position:sticky;top:54px;box-shadow:var(--shadow)}
+.dpanel h2{font-family:var(--serif);font-size:30px;line-height:1.05}
+.dsec{margin-top:18px;padding-top:16px;border-top:2px dashed var(--snow)}
+.dsec h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--branch);margin-bottom:10px}
+.cfg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cfg div{background:var(--snow);border-radius:12px;padding:9px 11px}
+.cfg small{display:block;font-size:10.5px;color:var(--branch);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.cfg b{font-size:14px}
+.thumbrow{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.thumbrow img,.thumbrow .tph{height:96px;border:1px solid var(--snow);border-radius:4px;background:#fff;box-shadow:0 6px 10px -8px rgba(39,54,63,.7)}
+.thumbrow .tph{width:68px;display:grid;place-items:center}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.hist{font-size:13px;color:var(--branch);display:flex;flex-direction:column;gap:4px}
+.busygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.bcard{background:var(--paper);border-radius:20px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;transition:opacity .35s,transform .35s}
+.bcard.leaving{opacity:0;transform:scale(.9) rotate(2deg)}
+.bcard .c{font-family:var(--serif);font-size:26px;font-weight:700}
+.bcard .btn{min-height:58px;font-size:17px;margin-top:8px}
+.tblwrap{overflow-x:auto;border-radius:18px;box-shadow:var(--shadow)}
+.tbl{width:100%;border-collapse:collapse;background:var(--paper);font-size:14px;min-width:760px}
+.tbl th{background:var(--pine);color:var(--paper);text-align:left;padding:12px 14px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.tbl td{padding:12px 14px;border-top:1.5px dashed var(--snow);vertical-align:top}
+.tbl td.num{font-variant-numeric:tabular-nums;font-weight:700}
+@media (max-width:1023px){
+  .adm{grid-template-columns:1fr}
+  .side{height:auto;flex-direction:row;align-items:center;padding:12px 16px;z-index:30;gap:14px}
+  .side nav{flex-direction:row}
+  .side a{padding:9px 12px;min-height:44px}
+  .side .who,.side .lace{display:none}
+  .cfg{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:767px){
+  .split{grid-template-columns:1fr}
+  .dpanel{position:static}
+  .stat b{font-size:30px}
+  .side .brand small{display:none}
+  .side a span{display:none}
+}
+
+/* ---------- Animasi scroll ---------- */
+.js .reveal{opacity:0;transform:translateY(22px);transition:opacity .5s ease-out,transform .55s cubic-bezier(.2,.8,.2,1)}
+.js .reveal.in{opacity:1;transform:none}
+.js .tilt{opacity:0;transform:translateY(28px) rotate(var(--rot,-2deg));transition:opacity .45s ease-out,transform .5s cubic-bezier(.2,.8,.2,1)}
+.js .tilt.in{opacity:1;transform:rotate(calc(var(--rot,-2deg) * .35))}
+.js .tilt.in:hover{transform:rotate(0) translateY(-3px)}
+#toast{position:fixed;left:50%;bottom:150px;transform:translate(-50%,20px);background:var(--pine);color:var(--paper);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.3s;z-index:90;outline:1.5px dashed rgba(246,244,241,.4);outline-offset:-5px;max-width:90vw}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+body.admin #toast{bottom:30px}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.12s!important}
+  .js .reveal,.js .tilt{transform:none!important}
+  .ticker .track{animation:none}
+}
+</style>
+</head>
+<body class="student">
+<div id="demobar" role="navigation" aria-label="Mode pratinjau">
+  <span>Pratinjau:</span>
+  <button id="dm-s" onclick="location.hash='#/'">Mahasiswa · HP</button>
+  <button id="dm-a" onclick="location.hash='#/admin'">Admin · iPad/Web</button>
+</div>
+<div id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+document.documentElement.classList.add('js');
+
+/* =========================================================
+   KONFIGURASI
+   ========================================================= */
+const WA_TOKO = '6281234567890'; // GANTI: nomor WhatsApp Graha Media (format 62...)
+const MAX_MB = 20, MAX_PAGES = 50;
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =========================================================
+   DATA PRODUK (skema konsisten — PRD bagian 6)
+   ========================================================= */
+const CATEGORIES = [
+  {id:'print', name:'Print Dokumen'},
+  {id:'warna', name:'Print Warna'},
+  {id:'jilid', name:'Jilid'},
+  {id:'finishing', name:'Finishing'}
+];
+const UNIT = {per_halaman:'halaman', per_lembar:'lembar', per_dokumen:'dokumen', per_pcs:'pcs'};
+const PRODUCTS = [
+  {sku:'PRT-001', slug:'print-hitam-putih-a4', name:'Print Hitam Putih A4', category:'print', size:'A4', short_desc:'Makalah, modul, dan skripsi. Tarif dari wawancara toko.', description:'Cetak dokumen teks hitam putih di kertas A4. Tarif Rp1.000 per 3 halaman sesuai keterangan Pak Herman.', pricing_unit:'per_halaman', base_price:333, price_status:'terkonfirmasi', options:['A4','Satu sisi / bolak-balik','1 atau 2 halaman per lembar'], needs_file:true, lead_time:'±30 menit', tags:['hitam putih','bw','fotokopi','fc','makalah','skripsi','tugas','modul','laporan'], is_active:true},
+  {sku:'PRT-002', slug:'print-warna-a4', name:'Print Warna A4', category:'warna', size:'A4', short_desc:'Slide, laporan bergambar. Harga mengikuti proporsi warna.', description:'Harga per halaman dihitung dari persentase area berwarna yang dianalisis otomatis (Peta Warna Halaman).', pricing_unit:'per_halaman', base_price:750, price_status:'simulasi', options:['A4','Satu sisi / bolak-balik','1 atau 2 halaman per lembar'], needs_file:true, lead_time:'±45 menit', tags:['warna','color','slide','presentasi','ppt','gambar','foto'], is_active:true},
+  {sku:'PRT-003', slug:'print-warna-a3', name:'Print Warna A3', category:'warna', size:'A3', short_desc:'Poster seminar dan infografis ukuran besar.', description:'Cetak warna di kertas A3. Cocok untuk poster acara kampus dan infografis.', pricing_unit:'per_halaman', base_price:1500, price_status:'simulasi', options:['A3','Satu sisi'], needs_file:true, lead_time:'±1 jam', tags:['poster','a3','infografis','seminar','besar','warna'], is_active:true},
+  {sku:'PRT-004', slug:'print-hitam-putih-f4', name:'Print Hitam Putih F4', category:'print', size:'F4', short_desc:'Dokumen resmi dan formulir ukuran folio.', description:'Cetak hitam putih di kertas F4 (folio) untuk formulir dan berkas administrasi.', pricing_unit:'per_halaman', base_price:400, price_status:'simulasi', options:['F4','Satu sisi / bolak-balik'], needs_file:true, lead_time:'±30 menit', tags:['f4','folio','formulir','berkas','legal','hitam putih'], is_active:true},
+  {sku:'JLD-001', slug:'jilid-soft-cover', name:'Jilid Soft Cover', category:'jilid', size:'—', short_desc:'Laporan praktikum dan proposal, sampul mika.', description:'Jilid lem dengan sampul soft cover. Dipilih di langkah simulasi saat memesan cetak.', pricing_unit:'per_dokumen', base_price:5000, price_status:'simulasi', options:['Posisi jilid kiri'], needs_file:true, lead_time:'±1 jam', tags:['jilid','binding','laporan','proposal','skripsi','soft cover'], is_active:true},
+  {sku:'JLD-002', slug:'jilid-spiral', name:'Jilid Spiral', category:'jilid', size:'—', short_desc:'Modul dan buku catatan yang mudah dibuka rata.', description:'Jilid spiral plastik. Dokumen bisa dibuka 360°.', pricing_unit:'per_dokumen', base_price:8000, price_status:'simulasi', options:['Posisi jilid kiri / atas'], needs_file:true, lead_time:'±1 jam', tags:['jilid','spiral','ring','binding','modul'], is_active:true},
+  {sku:'FIN-001', slug:'laminasi-a4', name:'Laminasi A4', category:'finishing', size:'A4', short_desc:'Sertifikat dan kartu agar tahan air.', description:'Laminasi plastik per lembar hasil cetak.', pricing_unit:'per_lembar', base_price:3000, price_status:'simulasi', options:['Glossy'], needs_file:true, lead_time:'±20 menit', tags:['laminasi','laminating','plastik','sertifikat','kartu'], is_active:true},
+  {sku:'FIN-002', slug:'potong-kertas', name:'Potong Kertas', category:'finishing', size:'—', short_desc:'Rapikan kartu nama, undangan, atau label.', description:'Pemotongan hasil cetak sesuai garis potong.', pricing_unit:'per_dokumen', base_price:2000, price_status:'simulasi', options:['Sesuai catatan'], needs_file:true, lead_time:'±20 menit', tags:['potong','cutting','kartu nama','undangan','label'], is_active:true}
+];
+const REQUIRED = ['sku','slug','name','category','short_desc','pricing_unit','base_price','price_status','lead_time','tags'];
+function validateProduct(p){
+  const miss = REQUIRED.filter(k => p[k]===undefined || p[k]==='' || (Array.isArray(p[k]) && p[k].length<2));
+  if(!/^[A-Z]{3}-\d{3}$/.test(p.sku)) miss.push('format SKU');
+  if(p.name && p.name.length>40) miss.push('nama > 40');
+  if(!(p.base_price>0)) miss.push('harga');
+  return miss;
+}
+const prod = sku => PRODUCTS.find(p=>p.sku===sku);
+const catName = id => (CATEGORIES.find(c=>c.id===id)||{}).name||id;
+
+/* Tarif: satu sumber untuk katalog, estimasi, dan ringkasan */
+const TARIF = {
+  bw: prod('PRT-001').base_price,                 // per muka A4 (Rp1.000 / 3) — terkonfirmasi
+  tiers: [ {max:10,price:750}, {max:30,price:1000}, {max:60,price:1500}, {max:101,price:2000} ], // simulasi
+  paperFactor: {A4:1, F4:1.2, A3:2}               // simulasi
+};
+const PAPERS = {A4:{w:210,h:297}, A3:{w:297,h:420}, F4:{w:215,h:330}};
+const SIZE_REF = [['A4',595,842],['A3',842,1191],['F4',609,935],['Letter',612,792],['Legal',612,1008],['A5',420,595]];
+
+/* =========================================================
+   UTILITAS
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const rp = n => 'Rp' + Math.round(n).toLocaleString('id-ID');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct = n => (n<10 ? n.toFixed(1) : Math.round(n)).toString().replace('.',',');
+const mem = {};
+const db = {
+  get(k,d){ if(k in mem) return mem[k]; try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ mem[k]=v; try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ /* kuota penuh: tetap di memori */ } }
+};
+const wa = (num,msg) => `https://wa.me/${String(num).replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),2400); }
+function ago(ms){ const m=Math.round((Date.now()-ms)/60000); if(m<1) return 'baru saja'; if(m<60) return m+' menit lalu'; const h=Math.round(m/60); if(h<24) return h+' jam lalu'; return new Date(ms).toLocaleDateString('id-ID'); }
+const fdate = ms => new Date(ms).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+
+const ic = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const I = {
+  home: ic('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>'),
+  grid: ic('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'),
+  search: ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  receipt: ic('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'),
+  user: ic('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+  chat: ic('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/>'),
+  check: ic('<path d="M5 12l5 5 9-10"/>'),
+  alert: ic('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/>'),
+  upload: ic('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/>'),
+  right: ic('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  left: ic('<path d="M19 12H5M11 6l-6 6 6 6"/>'),
+  clock: ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  file: ic('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>'),
+  clip: ic('<path d="M8 12l6-6a3 3 0 014 4l-8 8a5 5 0 01-7-7l7-7"/>'),
+  spark: ic('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/>'),
+  print: ic('<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>'),
+  tag: ic('<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>'),
+  coins: ic('<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>'),
+  bolt: ic('<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>'),
+  download: ic('<path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 20h16"/>'),
+  needle: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M14 50L46 14"/><ellipse cx="47.5" cy="12.5" rx="3" ry="5" transform="rotate(42 47.5 12.5)"/><path d="M47 13c6 8 4 22-10 28" stroke-dasharray="3 4"/><path d="M8 56h22" stroke-dasharray="4 4"/></svg>`
+};
+const HEART = 'M24 42S6 31 3.5 20.5C1.6 12.4 6.6 6 13.5 6c4.6 0 8.2 2.6 10.5 6.2C26.3 8.6 29.9 6 34.5 6 41.4 6 46.4 12.4 44.5 20.5 42 31 24 42 24 42z';
+const patch = (s=56,cls='') => `<svg class="patch ${cls}" width="${s}" height="${s}" viewBox="0 0 48 48" aria-hidden="true"><path d="${HEART}" fill="#34495A" stroke="#BEB3AC" stroke-width="2" stroke-dasharray="3 3"/><g transform="translate(12 12) scale(.5)"><path d="${HEART}" fill="#6B212C" stroke="#DCE0E8" stroke-width="3" stroke-dasharray="4 4"/></g></svg>`;
+const heart = `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="${HEART}" fill="currentColor"/></svg>`;
+
+/* =========================================================
+   STATE & PENYIMPANAN
+   ========================================================= */
+const S = { route:'', q:'', cat:'all', sort:'rel', flow:null, admFilter:'Belum selesai', admQ:'', admSel:null, busy:false };
+const profile = () => db.get('gm_profile', {name:'Mahasiswa Demo', wa:'6281200000000'});
+const orders = () => db.get('gm_orders', []);
+const saveOrders = o => db.set('gm_orders', o);
+function nextCode(){
+  const n = db.get('gm_seq', 3) + 1; db.set('gm_seq', n);
+  const d = new Date();
+  return `GM-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}-${String(n).padStart(3,'0')}`;
+}
+function seed(){
+  if(db.get('gm_orders', null)) return;
+  const now = Date.now(), d=new Date(), dm=`${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
+  saveOrders([
+    {code:`GM-${dm}-001`, createdAt:now-25*60000, mine:false, customer:{name:'Rizky A.', wa:'6281211110001'}, file:{name:'Laporan_Praktikum_Fisika.pdf', pages:24, mb:'3,1 MB'}, config:{paper:'A4',orient:'portrait',scale:'fit',duplex:false,layout:1}, copies:1, sheets:24, sidesN:24, finishing:{jilid:'soft',laminasi:false,potong:false}, note:'Tolong jilid warna biru.', est:{total:13100, lines:[{label:'Cetak hitam putih A4',sub:'24 muka × 1 salinan',amount:8000},{label:'Jilid Soft Cover',sub:'1 × Rp5.000',amount:5000}]}, color:{colN:0,bwN:24,maxPct:0}, check:{score:23,total:24,issues:['Halaman 24 terindikasi kosong']}, thumbs:[], status:'Belum selesai', history:[{at:now-25*60000,status:'Belum selesai',by:'Sistem'}]},
+    {code:`GM-${dm}-002`, createdAt:now-8*60000, mine:false, customer:{name:'Nadia P.', wa:'6281211110002'}, file:{name:'Poster_Seminar_Himpunan.pdf', pages:1, mb:'6,8 MB'}, config:{paper:'A3',orient:'portrait',scale:'fit',duplex:false,layout:1}, copies:3, sheets:1, sidesN:1, finishing:{jilid:'none',laminasi:true,potong:false}, note:'', est:{total:21000, lines:[{label:'Cetak warna A3',sub:'1 muka × 3 salinan',amount:12000},{label:'Laminasi',sub:'3 lembar × Rp3.000',amount:9000}]}, color:{colN:1,bwN:0,maxPct:78}, check:{score:1,total:1,issues:[]}, thumbs:[], status:'Belum selesai', history:[{at:now-8*60000,status:'Belum selesai',by:'Sistem'}]},
+    {code:`GM-${dm}-003`, createdAt:now-130*60000, mine:false, customer:{name:'Fajar M.', wa:'6281211110003'}, file:{name:'Slide_Kewirausahaan.pdf', pages:12, mb:'2,4 MB'}, config:{paper:'A4',orient:'landscape',scale:'fit',duplex:true,layout:2}, copies:1, sheets:3, sidesN:6, finishing:{jilid:'none',laminasi:false,potong:false}, note:'2 slide per halaman ya.', est:{total:6000, lines:[{label:'Cetak warna A4',sub:'6 muka × 1 salinan',amount:6000}]}, color:{colN:6,bwN:0,maxPct:22}, check:{score:12,total:12,issues:[]}, thumbs:[], status:'Selesai', history:[{at:now-130*60000,status:'Belum selesai',by:'Sistem'},{at:now-70*60000,status:'Selesai',by:'Admin'}]}
+  ]);
+}
+
+/* =========================================================
+   PENCARIAN (toleran salah ketik + sinonim)
+   ========================================================= */
+const SYN = {fc:'fotokopi', fotocopy:'fotokopi', bw:'hitam putih', hp:'hitam putih', binding:'jilid', laminating:'laminasi', laminate:'laminasi', folio:'f4', color:'warna', colour:'warna', berwarna:'warna', cutting:'potong', ppt:'presentasi', slide:'presentasi', print:'', cetak:'', printing:''};
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+function lev(a,b){
+  const m=a.length,n=b.length; if(Math.abs(m-n)>1) return 2;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; }
+  return prev[n];
+}
+function searchProducts(q){
+  const raw = norm(q).split(' ').filter(Boolean);
+  const toks = raw.flatMap(t => t in SYN ? (SYN[t] ? norm(SYN[t]).split(' ') : []) : [t]);
+  let list = PRODUCTS.filter(p=>p.is_active);
+  if(!raw.length) return list.map(p=>({p,score:0}));
+  if(!toks.length) return list.map(p=>({p,score:0}));
+  return list.map(p=>{
+    const hay = norm([p.name,p.short_desc,p.tags.join(' '),catName(p.category),p.sku,p.size].join(' ')).split(' ');
+    let score=0, hit=0, fuzzy=false;
+    toks.forEach(t=>{
+      let best=0;
+      hay.forEach(w=>{
+        if(w===t) best=Math.max(best,3);
+        else if(t.length>=2 && w.startsWith(t)) best=Math.max(best,2);
+        else if(t.length>=4 && lev(w,t)<=1){ best=Math.max(best,1.5); fuzzy=true; }
+      });
+      if(best) hit++; score+=best;
+    });
+    if(norm(p.name).includes(norm(q))) score+=4;
+    return {p, score:score+hit*2, hit, fuzzy};
+  }).filter(r=>r.hit>0).sort((a,b)=>b.score-a.score);
+}
+
+/* =========================================================
+   ANALISIS PDF (Smart Print Check + Peta Warna)
+   ========================================================= */
+function classify(w,h){
+  const a=Math.min(w,h), b=Math.max(w,h);
+  for(const [name,rw,rh] of SIZE_REF) if(Math.abs(a-rw)/rw<.03 && Math.abs(b-rh)/rh<.03) return name;
+  return `${Math.round(a*25.4/72)}×${Math.round(b*25.4/72)} mm`;
+}
+function analyzeCanvas(c, wPt, hPt, n){
+  const img = c.toDataURL('image/jpeg', .82);
+  const sw = 100, sh = Math.max(1, Math.round(c.height*sw/c.width));
+  const s = document.createElement('canvas'); s.width=sw; s.height=sh;
+  const x = s.getContext('2d', {willReadFrequently:true}); x.drawImage(c,0,0,sw,sh);
+  const d = x.getImageData(0,0,sw,sh).data;
+  const bx = Math.max(2,Math.round(sw*.035)), by = Math.max(2,Math.round(sh*.035));
+  let ink=0,col=0,edge=0,edgeTot=0;
+  for(let y=0;y<sh;y++) for(let xx=0;xx<sw;xx++){
+    const k=(y*sw+xx)*4, r=d[k], g=d[k+1], b=d[k+2];
+    const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+    const isInk = (r+g+b)/3 < 232 || mx-mn > 30;
+    const isCol = mx-mn > 38 && mx > 40;
+    const inEdge = xx<bx || xx>=sw-bx || y<by || y>=sh-by;
+    if(inEdge) edgeTot++;
+    if(isInk){ ink++; if(inEdge) edge++; }
+    if(isCol) col++;
+  }
+  const t = document.createElement('canvas'); t.width=90; t.height=Math.round(c.height*90/c.width);
+  t.getContext('2d').drawImage(c,0,0,t.width,t.height);
+  const tot = sw*sh;
+  return { n, wPt, hPt, img, thumb:t.toDataURL('image/jpeg',.6),
+    inkPct:ink/tot*100, colorPct:col/tot*100, blank: ink/tot < .004, edge: edge/edgeTot > .02,
+    size: classify(wPt,hPt), orient: wPt>hPt ? 'landscape' : 'portrait' };
+}
+function majority(arr){ const m={}; arr.forEach(v=>m[v]=(m[v]||0)+1); return Object.entries(m).sort((a,b)=>b[1]-a[1])[0][0]; }
+const listPages = ps => ps.map(p=>p.n).join(', ');
+function runChecks(pages, fileState){
+  if(fileState==='locked') return {blocked:true, score:0, total:0, rows:[{key:'file', st:'warn', title:'Kondisi file', text:'PDF terkunci kata sandi. Simpan ulang tanpa sandi, lalu unggah lagi.'}]};
+  if(fileState==='corrupt') return {blocked:true, score:0, total:0, rows:[{key:'file', st:'warn', title:'Kondisi file', text:'PDF rusak atau tidak bisa dibaca. Coba ekspor ulang dokumen ke PDF.'}]};
+  const size = majority(pages.map(p=>p.size)), orient = majority(pages.map(p=>p.orient));
+  const diffSize = pages.filter(p=>p.size!==size), diffOr = pages.filter(p=>p.orient!==orient);
+  const blank = pages.filter(p=>p.blank), edge = pages.filter(p=>p.edge && !p.blank);
+  const flagged = new Set([...diffSize,...diffOr,...blank,...edge].map(p=>p.n));
+  const ori = o => o==='portrait' ? 'portrait (tegak)' : 'landscape (mendatar)';
+  return {
+    blocked:false, size, orient, total:pages.length, score:pages.length-flagged.size,
+    rows:[
+      {key:'file', st:'ok', title:'Kondisi file', text:'File terbaca normal dan tidak terkunci.'},
+      diffSize.length ? {key:'size', st:'warn', title:'Ukuran & konsistensi halaman', text:`Mayoritas ${size}; ${diffSize.length} halaman berukuran berbeda.`, pages:diffSize}
+                      : {key:'size', st:'ok', title:'Ukuran & konsistensi halaman', text:`Seluruh halaman berukuran ${size}.`},
+      diffOr.length ? {key:'orient', st:'warn', title:'Orientasi halaman', text:`Sebagian besar ${ori(orient)}; halaman berikut berbeda.`, pages:diffOr}
+                    : {key:'orient', st:'ok', title:'Orientasi halaman', text:`Orientasi konsisten, semua ${ori(orient)}.`},
+      blank.length ? {key:'blank', st:'warn', title:'Halaman kosong', text:`${blank.length} halaman terindikasi kosong.`, pages:blank, action:'skip'}
+                   : {key:'blank', st:'ok', title:'Halaman kosong', text:'Tidak ada halaman kosong.'},
+      edge.length ? {key:'edge', st:'warn', title:'Margin halaman', text:'Konten terindikasi terlalu dekat tepi kertas dan berpotensi terpotong.', pages:edge}
+                  : {key:'edge', st:'ok', title:'Margin halaman', text:'Tidak ada indikasi konten terlalu dekat tepi.'},
+      {key:'res', st:'soon', title:'Resolusi gambar', text:'Pemeriksaan gambar pecah hadir di tahap 2.'}
+    ]
+  };
+}
+async function loadPdfJs(){
+  if(window.pdfjsLib) return window.pdfjsLib;
+  await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'; s.onload=res; s.onerror=()=>rej(new Error('cdn')); document.head.appendChild(s); });
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  return window.pdfjsLib;
+}
+function setProgress(done,total,label){
+  const f=S.flow; f.loading={done,total,label};
+  const b=$('#ldbar'), t=$('#ldtxt');
+  if(b){ b.style.width=(total?done/total*100:8)+'%'; t.textContent=label; } else render(true);
+}
+function finishAnalysis(file, pages, fileState, t0){
+  const f=S.flow;
+  f.file=file; f.pages=pages; f.checks=runChecks(pages,fileState); f.analysisMs=performance.now()-t0;
+  f.loading=null; f.sheet=0; f.bw={};
+  if(pages.length && !f.orientSet) f.config.orient = f.checks.orient || 'portrait';
+  if(pages.length && !f.paperSet && PAPERS[f.checks.size]) f.config.paper = f.checks.size;
+  f.step=2; render();
+}
+async function pickFile(file){
+  const f=S.flow; if(!file) return;
+  f.error='';
+  if(!/\.pdf$/i.test(file.name) && file.type!=='application/pdf'){ f.error='File harus berformat PDF.'; return render(true); }
+  if(file.size > MAX_MB*1024*1024){ f.error=`Ukuran file ${(file.size/1048576).toFixed(1).replace('.',',')} MB melebihi batas ${MAX_MB} MB.`; return render(true); }
+  const t0=performance.now();
+  f.loading={done:0,total:0,label:'Menyiapkan pembaca PDF…'}; render(true);
+  const meta={name:file.name, mb:(file.size/1048576).toFixed(1).replace('.',',')+' MB'};
+  let lib; try{ lib=await loadPdfJs(); }catch(e){ f.loading=null; f.error='Pembaca PDF gagal dimuat (butuh koneksi internet). Coba dengan file contoh.'; return render(true); }
+  let doc;
+  try{ doc = await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise; }
+  catch(e){ meta.pages=0; return finishAnalysis(meta, [], e && e.name==='PasswordException' ? 'locked' : 'corrupt', t0); }
+  if(doc.numPages > MAX_PAGES){ f.loading=null; f.error=`Dokumen ${doc.numPages} halaman melebihi batas ${MAX_PAGES} halaman pada prototype. Pisahkan file, atau tanyakan ke toko lewat WhatsApp.`; return render(true); }
+  meta.pages=doc.numPages;
+  const pages=[];
+  for(let i=1;i<=doc.numPages;i++){
+    setProgress(i-1, doc.numPages, `Memeriksa halaman ${i} dari ${doc.numPages}…`);
+    const page = await doc.getPage(i);
+    const v1 = page.getViewport({scale:1});
+    const vp = page.getViewport({scale:Math.min(2, 440/Math.max(v1.width,v1.height)*1.3)});
+    const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+    const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:ctx, viewport:vp}).promise;
+    pages.push(analyzeCanvas(c, v1.width, v1.height, i));
+  }
+  setProgress(doc.numPages, doc.numPages, 'Menyusun hasil pemeriksaan…');
+  finishAnalysis(meta, pages, 'ok', t0);
+}
+/* File contoh buatan (tanpa internet) — 8 halaman dengan variasi warna, 1 kosong, 1 landscape, 1 mepet tepi */
+async function useSample(){
+  const f=S.flow; f.error=''; const t0=performance.now();
+  const specs=['cover','text','text','chart','text','blank','photo','edge'];
+  f.loading={done:0,total:specs.length,label:'Memeriksa halaman 1…'}; render(true);
+  const pages=[];
+  for(let i=0;i<specs.length;i++){
+    setProgress(i, specs.length, `Memeriksa halaman ${i+1} dari ${specs.length}…`);
+    await sleep(RM?0:110);
+    const t=specs[i], land=t==='photo', wPt=land?842:595, hPt=land?595:842;
+    const W=440, H=Math.round(W*hPt/wPt), c=document.createElement('canvas'); c.width=W; c.height=H;
+    const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+    const m=W*.1;
+    const lines=(y0,n,color='#555')=>{ x.fillStyle=color; for(let k=0;k<n;k++){ const lw=(W-2*m)*(k%5===4?.55:.94-(k%3)*.05); x.fillRect(m,y0+k*13,lw,5); } };
+    if(t==='cover'){ x.fillStyle='#6B212C'; x.fillRect(0,0,W,H*.36); x.fillStyle='#fff'; x.font='bold 30px Georgia'; x.fillText('Materi Kuliah',m,H*.18); x.font='italic 16px Georgia'; x.fillText('Pengantar Sistem Digital',m,H*.25); x.fillStyle='#27363F'; x.fillRect(m,H*.44,W*.25,8); lines(H*.5,8); }
+    if(t==='text'){ x.fillStyle='#27363F'; x.font='bold 18px Georgia'; x.fillText('Bab '+i,m,m+8); lines(m+28,Math.floor((H-2*m-40)/13)); }
+    if(t==='chart'){ x.fillStyle='#27363F'; x.font='bold 18px Georgia'; x.fillText('Hasil Pengukuran',m,m+8); lines(m+28,6);
+      const cols=['#6B212C','#27363F','#B0475A','#685652','#2F6F8F']; for(let k=0;k<5;k++){ x.fillStyle=cols[k]; const bh=60+k*28; x.fillRect(m+k*58,H*.62-bh,40,bh);} lines(H*.68,10); }
+    if(t==='photo'){ const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#2F6F8F'); g.addColorStop(.55,'#8EA1AE'); g.addColorStop(1,'#6B212C'); x.fillStyle=g; x.fillRect(m*.6,m*.6,W-m*1.2,H-m*1.2); x.fillStyle='#E8C27A'; x.beginPath(); x.arc(W*.72,H*.32,34,0,7); x.fill(); x.fillStyle='#27363F'; x.beginPath(); x.moveTo(m*.6,H-m*.6); x.lineTo(W*.35,H*.45); x.lineTo(W*.6,H-m*.6); x.fill(); }
+    if(t==='edge'){ x.fillStyle='#333'; for(let k=0;k*13<H-16;k++) x.fillRect(4,6+k*13,W-8-(k%4)*30,5); }
+    pages.push(analyzeCanvas(c,wPt,hPt,i+1));
+  }
+  setProgress(specs.length, specs.length, 'Menyusun hasil pemeriksaan…');
+  await sleep(RM?0:200);
+  finishAnalysis({name:'Materi_Kuliah_contoh.pdf', pages:specs.length, mb:'file contoh'}, pages, 'ok', t0);
+}
+
+/* =========================================================
+   HARGA (Nota Jahit)
+   ========================================================= */
+function sides(f){ const ps=f.pages.filter(p=>!(f.skipBlank && p.blank)); const per=f.config.layout, out=[]; for(let i=0;i<ps.length;i+=per) out.push(ps.slice(i,i+per)); return out; }
+const sheetsPerCopy = f => { const n=sides(f).length; return f.config.duplex ? Math.ceil(n/2) : n; };
+function sideCost(f,side){
+  const fac = TARIF.paperFactor[f.config.paper];
+  const colorPages = side.filter(p => !f.allBW && !f.bw[p.n] && p.colorPct>=1);
+  if(!colorPages.length) return {bw:true, pct:0, cost:TARIF.bw*fac};
+  const pc = Math.max(...colorPages.map(p=>p.colorPct));
+  return {bw:false, pct:pc, cost:TARIF.tiers.find(t=>pc<t.max).price*fac};
+}
+function estimate(f){
+  const ss=sides(f); let bwN=0,colN=0,bwSum=0,colSum=0,maxPct=0;
+  ss.forEach(s=>{ const r=sideCost(f,s); if(r.bw){bwN++;bwSum+=r.cost;} else {colN++;colSum+=r.cost; maxPct=Math.max(maxPct,r.pct);} });
+  const sheets=sheetsPerCopy(f), c=f.copies, lines=[], P=f.config.paper;
+  if(bwN) lines.push({label:`Cetak hitam putih ${P}`, sub:`${bwN} muka × ${c} salinan`, amount:bwSum*c, status:'terkonfirmasi'});
+  if(colN) lines.push({label:`Cetak warna ${P}`, sub:`${colN} muka · tarif per proporsi warna × ${c}`, amount:colSum*c, status:'simulasi'});
+  if(f.jilid!=='none'){ const p=prod(f.jilid==='soft'?'JLD-001':'JLD-002'); lines.push({label:p.name, sub:`${c} × ${rp(p.base_price)}`, amount:p.base_price*c, status:p.price_status}); }
+  if(f.laminasi){ const p=prod('FIN-001'); lines.push({label:'Laminasi', sub:`${sheets*c} lembar × ${rp(p.base_price)}`, amount:p.base_price*sheets*c, status:p.price_status}); }
+  if(f.potong){ const p=prod('FIN-002'); lines.push({label:'Potong kertas', sub:'per dokumen', amount:p.base_price, status:p.price_status}); }
+  if(P!=='A4' && (bwN||colN)) lines.forEach(l=>{ if(l.label.startsWith('Cetak')) l.status = P==='F4'&&l.status==='terkonfirmasi' ? 'simulasi' : l.status; });
+  lines.forEach(l=>l.amount=Math.round(l.amount));
+  const raw=lines.reduce((a,l)=>a+l.amount,0);
+  return {lines, total:Math.ceil(raw/100)*100, sheets, sidesN:ss.length, bwN, colN, maxPct, anySim:lines.some(l=>l.status==='simulasi')};
+}
+
+/* =========================================================
+   KOMPONEN TAMPILAN
+   ========================================================= */
+function header(){
+  return `<header class="hdr" id="hdr">
+    <a href="#/" class="logo">Graha Media<small>studio cetak</small></a>
+    <div class="hdr-actions">
+      <a class="iconbtn" href="#/katalog" aria-label="Cari layanan">${I.search}</a>
+      <a class="iconbtn" href="#/profil" aria-label="Profil">${I.user}</a>
+    </div></header>`;
+}
+function bnav(on){
+  const it=[['','Beranda',I.home],['katalog','Katalog',I.grid],['pesan','Cetak',I.upload],['pesanan','Pesanan',I.receipt]];
+  return `<nav class="bnav" aria-label="Navigasi utama">${it.map(([h,l,i])=>`<a href="#/${h}" class="${on===h?'on':''}" ${on===h?'aria-current="page"':''}>${i}<span>${l}</span></a>`).join('')}</nav>`;
+}
+function waFab(msg){ return `<a class="wa" href="${wa(WA_TOKO,msg)}" target="_blank" rel="noopener">${I.chat}<span>WhatsApp</span></a>`; }
+function art(p){
+  const pat={print:'pat-polka',warna:'pat-berrydot',jilid:'pat-gingham',finishing:'pat-stripe'}[p.category];
+  return `<div class="art ${pat}"><div class="mini ${p.category}"><span>${esc(p.size==='—'?'':p.size)}</span><i></i><i></i><i class="s"></i>${p.category==='warna'?'<b></b>':'<i></i><i class="s"></i>'}</div></div>`;
+}
+const priceTag = p => `<span class="badge ${p.price_status==='terkonfirmasi'?'b-ok':'b-sim'}">${p.price_status==='terkonfirmasi'?'tarif terkonfirmasi':'tarif simulasi'}</span>`;
+function pcard(p,i){
+  return `<a class="pcard tilt" style="--rot:${i%2?2:-2}deg" href="#/produk/${p.slug}">
+    ${art(p)}
+    <div class="body"><h3>${esc(p.name)}</h3><p class="sd">${esc(p.short_desc)}</p>
+    <span class="price">mulai ${rp(p.base_price)} <small style="font-weight:500;color:var(--branch)">/ ${UNIT[p.pricing_unit]}</small></span>
+    ${priceTag(p)}<span class="lead">${I.clock.replace('<svg','<svg width="12" height="12" style="vertical-align:-2px"')} ${esc(p.lead_time)}</span></div></a>`;
+}
+function busyInfo(){
+  const d=new Date(), h=d.getHours(), day=d.getDay();
+  const hot=(h>=7&&h<13)||(day===1&&h>=18&&h<22);
+  return `<div class="busy reveal"><span class="dot ${hot?'hot':''}"></span><span>${hot?'<b>Toko sedang ramai.</b> Pesanan mungkin selesai lebih lama dari estimasi.':'<b>Toko sedang lengang.</b> Waktu yang pas untuk mengirim pesanan.'}</span></div>`;
+}
+
+/* ---------- Beranda ---------- */
+function viewHome(){
+  const popular=['PRT-001','PRT-002','PRT-003','JLD-001'].map(prod);
+  return `<div class="phone">${header()}
+  <section class="hero denim reveal">
+    <div class="lace" id="lace" aria-hidden="true"></div>
+    <p class="eyebrow">Print untuk mahasiswa</p>
+    <h1>Cetak tugasmu, <em>tanpa tebak-tebakan.</em></h1>
+    <p>Unggah PDF, cek kelayakannya, lihat simulasi cetak, dan tahu perkiraan harganya sebelum kirim.</p>
+    <a class="btn btn-paper" href="#/pesan">${I.upload} Cetak PDF sekarang</a>
+    ${patch(62)}
+  </section>
+  ${busyInfo()}
+  <div class="ticker" id="ticker" aria-hidden="true"><div class="track">${Array(2).fill(['Periksa','Simulasikan','Optimalkan','Cetak','Jilid','Laminasi','Potong']).flat().map(t=>`<span>${t} ✦</span>`).join('')}</div></div>
+
+  <section class="sec">
+    <p class="eyebrow reveal">Kenapa Graha Media</p>
+    <h2 class="h2 reveal">Dokumenmu dicek <em>sebelum</em> uangmu keluar</h2>
+    <div class="folders" data-stagger>
+      <div class="folder"><span class="clip">${I.clip}</span><p class="tag">Smart Print Check</p><h3>Periksa kelayakan</h3><p>Halaman kosong, ukuran, orientasi, dan margin dicek otomatis begitu file diunggah.</p></div>
+      <div class="folder f2"><span class="clip">${I.clip}</span><p class="tag">Print Preview Simulator</p><h3>Lihat hasilnya dulu</h3><p>Coba ukuran kertas, orientasi, bolak-balik, atau 2 halaman per lembar.</p></div>
+      <div class="folder f3"><span class="clip">${I.clip}</span><p class="tag">Peta Warna Halaman</p><h3>Tahu kenapa harganya segitu</h3><p>Proporsi warna dan biaya tiap halaman terlihat. Pilih halaman mana yang cukup hitam putih.</p></div>
+    </div>
+  </section>
+  <div class="stitch-draw" aria-hidden="true"></div>
+
+  <section class="sec" style="padding-bottom:10px">
+    <div class="row between"><h2 class="h2 reveal">Layanan <em>populer</em></h2><a href="#/katalog" class="small" style="font-weight:700;color:var(--berry)">Lihat semua</a></div>
+  </section>
+  <div class="chips reveal">${CATEGORIES.map(c=>`<a class="chip" href="#/katalog" onclick="S.cat='${c.id}'">${c.name}</a>`).join('')}</div>
+  <div class="grid" data-stagger>${popular.map(pcard).join('')}</div>
+
+  <section class="sec" style="margin-top:12px">
+    <p class="eyebrow reveal">Cara kerja</p>
+    <h2 class="h2 reveal">Periksa, simulasikan, <em>optimalkan,</em> cetak</h2>
+    <ol class="steps" id="steps"><span class="fill" id="stepsfill"></span>
+      <li data-n="1" class="reveal"><b>Unggah PDF</b><span>Dari HP, maksimal ${MAX_MB} MB dan ${MAX_PAGES} halaman.</span></li>
+      <li data-n="2" class="reveal"><b>Cek & tinjau peringatan</b><span>Lanjutkan atau ganti file, kamu yang putuskan.</span></li>
+      <li data-n="3" class="reveal"><b>Atur & lihat simulasi</b><span>Kertas, orientasi, sisi cetak, jilid, laminasi.</span></li>
+      <li data-n="4" class="reveal"><b>Cek Nota Jahit, kirim</b><span>Dapat kartu pesanan, pantau statusnya dari HP.</span></li>
+    </ol>
+  </section>
+
+  <footer class="foot denim reveal"><div class="lace" aria-hidden="true"></div>
+    <p class="logo" style="color:var(--paper)">Graha Media<small style="color:var(--frost)">studio cetak</small></p>
+    <p style="margin-top:10px">Harga di website adalah estimasi. Harga akhir dikonfirmasi di toko.</p>
+  </footer>
+  </div>${bnav('')}${waFab('Halo Graha Media, saya mau tanya tentang layanan cetak.')}`;
+}
+
+/* ---------- Katalog ---------- */
+function resultsHTML(){
+  let r = searchProducts(S.q);
+  if(S.cat!=='all') r = r.filter(x=>x.p.category===S.cat);
+  if(S.sort==='low') r.sort((a,b)=>a.p.base_price-b.p.base_price);
+  if(S.sort==='high') r.sort((a,b)=>b.p.base_price-a.p.base_price);
+  const fuzzy = S.q && r.some(x=>x.fuzzy);
+  if(!r.length) return `<div class="empty reveal">${patch(64)}<h3 class="h2" style="font-size:21px">Belum ketemu “${esc(S.q)}”</h3><p class="muted small" style="margin:6px 0 14px">Coba kata lain, atau tanyakan langsung ke toko.</p><a class="btn btn-berry" target="_blank" rel="noopener" href="${wa(WA_TOKO,`Halo Graha Media, apakah ada layanan "${S.q}"?`)}">${I.chat} Tanya via WhatsApp</a></div>`;
+  return `<p class="small muted" style="padding:0 18px 10px">${r.length} layanan${S.q?` untuk “${esc(S.q)}”`:''}${fuzzy?' · termasuk hasil mirip':''}</p><div class="grid" data-stagger>${r.map((x,i)=>pcard(x.p,i)).join('')}</div>`;
+}
+function viewCatalog(){
+  const sugg=['print skripsi','fc','poster a3','laminating','jilid spiral','warnaa'];
+  return `<div class="phone">${header()}
+  <section class="sec" style="padding-bottom:10px"><p class="eyebrow reveal">Katalog</p><h1 class="h1 reveal">Mau cetak <em>apa</em> hari ini?</h1></section>
+  <div class="searchbox reveal">${I.search}<label class="sr" for="q">Cari layanan</label><input id="q" type="search" placeholder="Cari: print skripsi, fc, poster…" value="${esc(S.q)}" oninput="App.search(this.value)" autocomplete="off"></div>
+  <div class="chips reveal" id="sugg" ${S.q?'hidden':''}>${sugg.map(s=>`<button class="chip" onclick="App.search('${s}',true)">${s}</button>`).join('')}</div>
+  <div class="chips reveal">
+    ${[{id:'all',name:'Semua'},...CATEGORIES].map(c=>`<button class="chip ${S.cat===c.id?'on':''}" onclick="App.cat('${c.id}')">${c.name}</button>`).join('')}
+  </div>
+  <div class="row between" style="padding:4px 18px 12px"><span class="small muted">Urutkan</span>
+    <select class="sortsel" onchange="App.sort(this.value)" aria-label="Urutkan">
+      <option value="rel" ${S.sort==='rel'?'selected':''}>Paling relevan</option>
+      <option value="low" ${S.sort==='low'?'selected':''}>Harga termurah</option>
+      <option value="high" ${S.sort==='high'?'selected':''}>Harga termahal</option>
+    </select></div>
+  <div id="results">${resultsHTML()}</div>
+  </div>${bnav('katalog')}${waFab('Halo Graha Media, saya mau tanya tentang layanan cetak.')}`;
+}
+
+/* ---------- Detail produk ---------- */
+function viewProduct(slug){
+  const p=PRODUCTS.find(x=>x.slug===slug); if(!p) return viewCatalog();
+  const rel=PRODUCTS.filter(x=>x.category===p.category && x.sku!==p.sku).slice(0,2);
+  return `<div class="phone">${header()}
+  <div style="padding:0 18px"><a class="back" href="#/katalog">${I.left} Katalog</a></div>
+  <div class="detail-art reveal">${art(p)}</div>
+  <section class="sec">
+    <div class="row reveal" style="gap:6px;flex-wrap:wrap"><span class="badge b-mist">${catName(p.category)}</span>${priceTag(p)}</div>
+    <h1 class="h1 reveal" style="margin-top:8px">${esc(p.name)}</h1>
+    <p class="muted reveal" style="margin-top:6px">${esc(p.description)}</p>
+    <p class="reveal" style="margin-top:12px"><span class="price" style="font-size:24px">mulai ${rp(p.base_price)}</span> <span class="muted small">/ ${UNIT[p.pricing_unit]}</span></p>
+    <div class="card reveal mt"><dl class="spec">
+      <dt>SKU</dt><dd>${p.sku}</dd><dt>Satuan</dt><dd>per ${UNIT[p.pricing_unit]}</dd>
+      <dt>Estimasi waktu</dt><dd>${esc(p.lead_time)}</dd><dt>Status tarif</dt><dd>${p.price_status}</dd>
+      <dt>Opsi</dt><dd>${p.options.map(esc).join(' · ')}</dd></dl></div>
+    <div class="stack mt reveal">
+      <a class="btn btn-berry btn-block" href="#/pesan/${p.slug}">${I.upload} Pesan & unggah PDF</a>
+      <a class="btn btn-ghost btn-block" target="_blank" rel="noopener" href="${wa(WA_TOKO,`Halo Graha Media, saya mau tanya tentang ${p.name} (${p.sku}).`)}">${I.chat} Tanya via WhatsApp</a>
+    </div>
+    ${p.price_status==='simulasi'?'<p class="note mt reveal">Tarif simulasi: belum dikonfirmasi toko, dipakai untuk uji prototype.</p>':''}
+  </section>
+  ${rel.length?`<div class="stitch-draw"></div><section class="sec" style="padding-bottom:10px"><h2 class="h2 reveal" style="font-size:21px">Sering dipesan <em>bersama</em></h2></section><div class="grid" data-stagger>${rel.map(pcard).join('')}</div>`:''}
+  </div>${bnav('katalog')}${waFab(`Halo Graha Media, saya mau tanya tentang ${p.name} (${p.sku}).`)}`;
+}
+
+/* ---------- Alur pesan ---------- */
+function newFlow(slug){
+  const p = slug ? PRODUCTS.find(x=>x.slug===slug) : null;
+  const f = {step:1, product:p?p.sku:null, file:null, pages:[], checks:null, error:'', loading:null,
+    config:{paper:'A4', orient:'portrait', scale:'fit', duplex:false, layout:1}, sheet:0,
+    bw:{}, allBW:false, skipBlank:false, copies:1, jilid:'none', laminasi:false, potong:false, note:'', agreed:false, done:null};
+  if(p){
+    if(p.size==='A3'||p.size==='F4'){ f.config.paper=p.size; f.paperSet=true; }
+    if(p.sku==='PRT-001'||p.sku==='PRT-004') f.allBW=true;
+    if(p.sku==='JLD-001') f.jilid='soft';
+    if(p.sku==='JLD-002') f.jilid='spiral';
+    if(p.sku==='FIN-001') f.laminasi=true;
+    if(p.sku==='FIN-002') f.potong=true;
+  }
+  return f;
+}
+function stepper(step){
+  const L=['Unggah','Periksa','Simulasi','Harga','Kirim'];
+  return `<div class="stepper" role="list" aria-label="Langkah pemesanan"><span class="prog" style="width:calc(${(Math.min(step,5)-1)/4*100}% - ${(Math.min(step,5)-1)/4*24}px)"></span>
+    ${L.map((l,i)=>`<div class="node ${i+1<step?'done':i+1===step?'cur':''}" role="listitem" ${i+1===step?'aria-current="step"':''}><i>${i+1<step?'✓':i+1}</i><span>${l}</span></div>`).join('')}</div>`;
+}
+function viewFlow(){
+  const f=S.flow, st=f.done?6:f.step;
+  let body='';
+  if(f.done) body=flowDone();
+  else if(f.loading) body=flowLoading();
+  else body=[flowUpload,flowCheck,flowSim,flowPrice,flowConfirm][f.step-1]();
+  return `<div class="phone">${header()}${st<6?stepper(st):''}${body}</div>${bnav('pesan')}${waFab(f.done?`Halo Graha Media, saya mau tanya pesanan ${f.done.code}.`:'Halo Graha Media, saya mau tanya tentang pesanan cetak.')}`;
+}
+const backBtn = to => `<button class="back" onclick="App.step(${to})">${I.left} Kembali</button>`;
+function flowUpload(){
+  const f=S.flow, p=f.product?prod(f.product):null;
+  return `<section class="sec"><p class="eyebrow reveal">Langkah 1</p><h1 class="h1 reveal">Unggah <em>dokumenmu</em></h1>
+    <p class="muted reveal" style="margin-top:6px">Format PDF, maksimal ${MAX_MB} MB dan ${MAX_PAGES} halaman. File hanya dipakai untuk pesanan ini.</p></section>
+  <div class="sec" style="padding-top:0">
+    ${p?`<div class="card reveal" style="display:flex;gap:12px;align-items:center;margin-bottom:14px;padding:12px"><div style="width:64px;border-radius:10px;overflow:hidden">${art(p)}</div><div><p class="small muted">Layanan dipilih</p><b>${esc(p.name)}</b></div></div>`:''}
+    ${f.error?`<p class="alert reveal" style="margin-bottom:12px">${esc(f.error)}</p>`:''}
+    <label class="drop reveal">${I.upload}<b>Pilih file PDF</b><span class="small muted">Ketuk untuk membuka file di HP</span>
+      <input type="file" accept="application/pdf,.pdf" onchange="App.pick(this.files[0])"></label>
+    <div class="or">atau</div>
+    <button class="btn btn-ghost btn-block reveal" onclick="App.sample()">${I.file} Coba dengan file contoh (8 halaman)</button>
+    <p class="note mt reveal">File contoh sengaja berisi halaman kosong, halaman landscape, dan teks mepet tepi agar semua pemeriksaan terlihat.</p>
+  </div>`;
+}
+function flowLoading(){
+  const l=S.flow.loading;
+  return `<section class="sec"><div class="card loader">
+    <div class="needle">${I.needle}</div>
+    <p class="eyebrow">Smart Print Check</p><h2 class="h2" style="font-size:22px">Sedang memeriksa <em>dokumenmu</em></h2>
+    <div class="bar"><i id="ldbar" style="width:${l.total?l.done/l.total*100:8}%"></i></div>
+    <p class="small muted" id="ldtxt">${esc(l.label)}</p></div></section>`;
+}
+function ring(score,total){
+  const r=30, c=2*Math.PI*r, p=total?score/total:0;
+  return `<svg viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="${r}" fill="none" stroke="#DCE0E8" stroke-width="7"/><circle cx="36" cy="36" r="${r}" fill="none" stroke="${p===1?'#27363F':'#6B212C'}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c*p} ${c}" transform="rotate(-90 36 36)" style="transition:stroke-dasharray 1s"/></svg>`;
+}
+function flowCheck(){
+  const f=S.flow, ch=f.checks, warns=ch.rows.filter(r=>r.st==='warn').length;
+  const icon={ok:I.check,warn:I.alert,soon:I.clock}, lab={ok:'OK',warn:'Periksa',soon:'Tahap 2'};
+  return `<section class="sec"><p class="eyebrow reveal">Langkah 2 · Smart Print Check</p>
+    <h1 class="h1 reveal">${ch.blocked?'File <em>belum bisa</em> diproses':'Pemeriksaan <em>selesai</em>'}</h1>
+    <p class="small muted reveal" style="margin-top:4px">Selesai dalam ${(f.analysisMs/1000).toFixed(1).replace('.',',')} detik · target ≤ 10 detik</p></section>
+  <div class="sec" style="padding-top:0"><div class="card reveal">
+    <div class="filebox">${I.file}<div><b>${esc(f.file.name)}</b><span class="small muted">${f.file.pages||'?'} halaman · PDF · ${esc(f.file.mb)}</span></div></div>
+    ${ch.blocked?'':`<div class="score">${ring(ch.score,ch.total)}<div><b>${ch.score}/${ch.total}</b><span class="small muted">halaman tanpa catatan${warns?` · ${warns} hal perlu ditinjau`:''}</span></div></div>`}
+    <div data-stagger>${ch.rows.map(r=>`<div class="crow ${r.st}"><span class="ic">${icon[r.st]}</span><div style="flex:1">
+      <h4>${r.title}</h4><p>${esc(r.text)}</p>
+      ${r.pages?`<div>${r.pages.map(p=>`<button class="pl" onclick="App.gotoPage(${p.n})" aria-label="Lihat halaman ${p.n}">hal. ${p.n}</button>`).join('')}</div>`:''}
+      ${r.action==='skip'?`<label class="toggle"><input type="checkbox" ${f.skipBlank?'checked':''} onchange="App.skipBlank(this.checked)"> Lewati halaman kosong saat mencetak</label>`:''}
+    </div><span class="st">${lab[r.st]}</span></div>`).join('')}</div>
+    <p class="note mt">Hasil berupa indikasi, bukan jaminan dokumen sempurna.</p>
+  </div>
+  <div class="row mt reveal" style="gap:10px">
+    <button class="btn btn-ghost" style="flex:1" onclick="App.reset()">Ganti file</button>
+    <button class="btn btn-berry" style="flex:1.4" ${ch.blocked?'disabled':''} onclick="App.step(3)">Lanjutkan ${I.right}</button>
+  </div></div>`;
+}
+function sheetHTML(f){
+  const c=f.config, P=PAPERS[c.paper]; let w=P.w, h=P.h; if(c.orient==='landscape') [w,h]=[h,w];
+  const ss=sides(f), side=ss[f.sheet]||[], row=w>h;
+  const pxW = row ? 330 : Math.round(330*w/h*1.05);
+  const usableW = w*.92, usableH = h*.92;
+  const slots = side.map(p=>{
+    let img;
+    if(c.scale==='actual' && c.layout===1){
+      const pw=p.wPt*25.4/72;
+      img=`<img class="actual" src="${p.img}" alt="Halaman ${p.n}" style="width:${pw/usableW*100}%">`;
+    } else img=`<img class="fit" src="${p.img}" alt="Halaman ${p.n}">`;
+    return `<div class="slot">${img}<span class="pno">hal. ${p.n}</span></div>`;
+  }).join('') + (c.layout===2 && side.length===1 ? '<div class="slot"></div>' : '');
+  return `<div class="sheet ${row?'':'col'}" style="width:${pxW}px;aspect-ratio:${w}/${h}" key="${f.sheet}-${c.paper}-${c.orient}-${c.layout}-${c.scale}">${slots||'<div class="slot"><div class="ph"></div></div>'}</div>`;
+}
+function simWarnings(f){
+  const c=f.config, P=PAPERS[c.paper], side=sides(f)[f.sheet]||[], out=[];
+  let w=P.w,h=P.h; if(c.orient==='landscape')[w,h]=[h,w];
+  side.forEach(p=>{
+    const pw=p.wPt*25.4/72, ph=p.hPt*25.4/72;
+    if(c.scale==='actual' && c.layout===1 && (pw>w*.92+1 || ph>h*.92+1)) out.push(`Hal. ${p.n} lebih besar dari area cetak ${c.paper}; sebagian konten akan terpotong. Pilih “Sesuaikan halaman”.`);
+    else if(p.size!==c.paper && c.scale==='fit') out.push(`Hal. ${p.n} berukuran ${p.size}, akan ${pw*ph>P.w*P.h?'diperkecil':'diperbesar'} agar pas di ${c.paper}.`);
+    if(p.orient!==c.orient && c.layout===1) out.push(`Hal. ${p.n} ${p.orient}, kertas ${c.orient}. Hasilnya akan mengecil; pertimbangkan ganti orientasi.`);
+    if(p.blank) out.push(`Hal. ${p.n} terindikasi kosong.`);
+    if(p.edge) out.push(`Hal. ${p.n}: konten mepet tepi, berpotensi terpotong mesin.`);
+  });
+  return out;
+}
+const seg = (key,opts,cur) => `<div class="seg" role="radiogroup">${opts.map(([v,l])=>`<button role="radio" aria-checked="${String(cur)===String(v)}" class="${String(cur)===String(v)?'on':''}" onclick="App.cfg('${key}','${v}')">${l}</button>`).join('')}</div>`;
+function flowSim(){
+  const f=S.flow, c=f.config, ss=sides(f), n=ss.length, sh=sheetsPerCopy(f);
+  const sideNo=f.sheet+1, sheetNo=c.duplex?Math.floor(f.sheet/2)+1:sideNo;
+  const warns=simWarnings(f);
+  return `<section class="sec" style="padding-bottom:10px">${backBtn(2)}<p class="eyebrow reveal">Langkah 3 · Print Preview Simulator</p><h1 class="h1 reveal">Lihat <em>hasil cetaknya</em></h1></section>
+  <div style="padding:0 14px"><div class="simstage pat-gingham reveal">
+    ${sheetHTML(f)}
+    <div class="simnav"><button onclick="App.sheet(-1)" ${f.sheet<=0?'disabled':''} aria-label="Muka sebelumnya">${I.left}</button>
+      <span>Muka ${sideNo}/${n} · Lembar ${sheetNo}${c.duplex?(f.sheet%2?' (belakang)':' (depan)'):''}</span>
+      <button onclick="App.sheet(1)" ${f.sheet>=n-1?'disabled':''} aria-label="Muka berikutnya">${I.right}</button></div>
+  </div>
+  <p class="note" style="text-align:center;margin-top:8px">Pratinjau ilustratif, bukan rendering mesin cetak.</p></div>
+  <div class="sec" style="padding-top:8px">
+    ${warns.length?`<div class="stack" style="gap:8px">${warns.map(w=>`<p class="alert">${esc(w)}</p>`).join('')}</div>`:''}
+    <div class="field"><span class="lbl">Ukuran kertas</span>${seg('paper',[['A4','A4'],['F4','F4'],['A3','A3']],c.paper)}</div>
+    <div class="field"><span class="lbl">Orientasi</span>${seg('orient',[['portrait','Portrait'],['landscape','Landscape']],c.orient)}</div>
+    <div class="field"><span class="lbl">Skala cetak</span>${seg('scale',[['fit','Sesuaikan halaman'],['actual','Ukuran asli']],c.scale)}</div>
+    <div class="field"><span class="lbl">Sisi cetak <span class="badge b-sim">perlu konfirmasi toko</span></span>${seg('duplex',[['false','Satu sisi'],['true','Bolak-balik']],c.duplex)}</div>
+    <div class="field"><span class="lbl">Layout <span class="badge b-sim">perlu konfirmasi toko</span></span>${seg('layout',[['1','1 hal / lembar'],['2','2 hal / lembar']],c.layout)}</div>
+
+    <div class="card mt reveal"><p class="eyebrow">Pengaturan simulasi</p><div class="summary">
+      <div><small>Kertas</small><b>${c.paper}</b></div><div><small>Orientasi</small><b>${c.orient==='portrait'?'Portrait':'Landscape'}</b></div>
+      <div><small>Skala</small><b>${c.scale==='fit'?'Sesuaikan':'Ukuran asli'}</b></div><div><small>Sisi</small><b>${c.duplex?'Bolak-balik':'Satu sisi'}</b></div>
+      <div><small>Layout</small><b>${c.layout} hal / lembar</b></div><div><small>Kertas terpakai</small><b>${sh} lembar / salinan</b></div></div></div>
+
+    <div class="field"><span class="lbl">Jumlah salinan</span><div class="qty"><button onclick="App.copies(-1)" aria-label="Kurangi">−</button><output>${f.copies}</output><button onclick="App.copies(1)" aria-label="Tambah">+</button></div></div>
+    <div class="field"><span class="lbl">Jilid</span>${seg('jilid',[['none','Tanpa'],['soft','Soft cover'],['spiral','Spiral']],f.jilid)}</div>
+    <div class="field"><span class="lbl">Finishing</span>
+      <label class="toggle"><input type="checkbox" ${f.laminasi?'checked':''} onchange="App.fin('laminasi',this.checked)"> Laminasi (${rp(prod('FIN-001').base_price)}/lembar)</label><br>
+      <label class="toggle"><input type="checkbox" ${f.potong?'checked':''} onchange="App.fin('potong',this.checked)"> Potong kertas (${rp(prod('FIN-002').base_price)})</label></div>
+    <div class="field"><label for="note">Catatan custom</label><textarea id="note" rows="3" placeholder="Mis. warna sampul biru, potong sesuai garis…" oninput="S.flow.note=this.value">${esc(f.note)}</textarea></div>
+    <button class="btn btn-berry btn-block mt" onclick="App.step(4)">Lihat Peta Warna & harga ${I.right}</button>
+  </div>`;
+}
+function flowPrice(){
+  const f=S.flow, ss=sides(f), est=estimate(f);
+  const allBWf={...f, allBW:true}, bwTotal=estimate(allBWf).total, save=est.total-bwTotal;
+  const top=Math.max(...TARIF.tiers.map(t=>t.price))*TARIF.paperFactor[f.config.paper];
+  return `<section class="sec" style="padding-bottom:8px">${backBtn(3)}<p class="eyebrow reveal">Langkah 4 · Peta Warna Halaman</p><h1 class="h1 reveal">Tahu <em>kenapa</em> harganya segini</h1></section>
+  <div class="sec" style="padding-top:0">
+    <div class="field" style="margin-top:0"><span class="lbl">Mode warna</span>${seg('allBW',[['false','Otomatis'],['true','Semua hitam putih']],f.allBW)}</div>
+    <div class="cmap" data-stagger>${ss.map(side=>{
+      const r=sideCost(f,side), blank=side.every(p=>p.blank), colorAble=side.some(p=>p.colorPct>=1);
+      const forced=side.some(p=>f.bw[p.n]);
+      return `<div class="cside ${blank?'k':r.bw?'':'c'}">
+        <span class="tagj">${blank?'kosong':r.bw?'H/P':'Warna '+pct(r.pct)+'%'}</span>
+        ${!r.bw && r.cost>=top*.74?`<span class="hrt" title="Halaman termahal">${heart}</span>`:''}
+        <div class="thumbs">${side.map(p=>`<img src="${p.thumb}" alt="Halaman ${p.n}">`).join('')}</div>
+        <div class="cost"><span class="pn">hal. ${side.map(p=>p.n).join('+')}</span><span>${rp(r.cost)}</span></div>
+        ${colorAble && !f.allBW?`<button class="bwbtn" onclick="App.bwSide('${side.map(p=>p.n).join(',')}')">${forced?'Kembalikan warna':'Jadikan H/P'}</button>`:''}
+      </div>`;}).join('')}</div>
+    ${save>0?`<div class="insight reveal">${I.spark}<span>${est.colN} muka berwarna menyumbang ${Math.round((est.lines.find(l=>l.label.startsWith('Cetak warna'))||{amount:0}).amount/est.total*100)}% biaya cetak. Jadikan hitam putih untuk hemat hingga <b>${rp(save)}</b>.</span></div>`:''}
+
+    <div class="nota" id="nota">
+      <h3>Nota Jahit</h3>
+      <p class="meta">Estimasi · ${fdate(Date.now())}<br>${esc(f.file.name)} · ${est.sidesN} muka · ${est.sheets} lembar/salinan</p>
+      ${est.lines.map(l=>`<div class="nline"><span>${esc(l.label)} ${l.status==='simulasi'?'<span class="badge b-sim">simulasi</span>':''}</span><b>${rp(l.amount)}</b></div><div class="nsub"><span>${esc(l.sub)}</span></div>`).join('')}
+      <div class="ntotal"><span style="font-weight:700">Estimasi total</span><b id="total" data-to="${est.total}">${rp(est.total)}</b></div>
+      <p class="note" style="margin-top:12px">Estimasi, bukan harga final. Harga akhir dikonfirmasi admin di toko.${est.anySim?' Tarif bertanda “simulasi” belum dikonfirmasi toko.':''}</p>
+    </div>
+    <button class="btn btn-berry btn-block mt" onclick="App.step(5)">Lanjut ke konfirmasi ${I.right}</button>
+  </div>`;
+}
+function flowConfirm(){
+  const f=S.flow, est=estimate(f), pr=profile(), c=f.config;
+  return `<section class="sec" style="padding-bottom:8px">${backBtn(4)}<p class="eyebrow reveal">Langkah 5</p><h1 class="h1 reveal">Periksa & <em>kirim</em></h1></section>
+  <div class="sec" style="padding-top:0"><div class="card reveal">
+    <div class="filebox">${I.file}<div><b>${esc(f.file.name)}</b><span class="small muted">${est.sidesN} muka · ${est.sheets} lembar × ${f.copies} salinan</span></div></div>
+    <div class="summary mt">
+      <div><small>Kertas</small><b>${c.paper} · ${c.orient==='portrait'?'Portrait':'Landscape'}</b></div>
+      <div><small>Cetak</small><b>${c.duplex?'Bolak-balik':'Satu sisi'} · ${c.layout} hal/lbr</b></div>
+      <div><small>Warna</small><b>${est.colN} warna · ${est.bwN} H/P</b></div>
+      <div><small>Finishing</small><b>${[f.jilid!=='none'?(f.jilid==='soft'?'Jilid soft':'Jilid spiral'):'',f.laminasi?'Laminasi':'',f.potong?'Potong':''].filter(Boolean).join(', ')||'—'}</b></div>
+    </div>
+    ${f.note?`<p class="small mt"><b>Catatan:</b> ${esc(f.note)}</p>`:''}
+    <div class="ntotal"><span style="font-weight:700">Estimasi total</span><b>${rp(est.total)}</b></div>
+  </div>
+  <div class="field"><label for="nm">Nama</label><input class="inp" id="nm" value="${esc(pr.name)}"></div>
+  <div class="field"><label for="wn">No. WhatsApp</label><input class="inp" id="wn" inputmode="tel" value="${esc(pr.wa)}"></div>
+  <label class="toggle mt"><input type="checkbox" id="agree" ${f.agreed?'checked':''} onchange="App.agree(this.checked)"> Saya paham harga ini estimasi dan bisa berbeda dari harga akhir di toko.</label>
+  <button class="btn btn-berry btn-block mt" id="sendbtn" ${f.agreed?'':'disabled'} onclick="App.submit()">Kirim Pesanan</button>
+  </div>`;
+}
+function flowDone(){
+  const o=S.flow.done;
+  return `<section class="sec" style="text-align:center"><p class="eyebrow reveal">Pesanan terkirim</p><h1 class="h1 reveal">Terima kasih, <em>${esc(o.customer.name.split(' ')[0])}</em></h1>
+    <p class="muted small reveal" style="margin-top:6px">Tunjukkan kartu ini di toko, atau simpan sebagai screenshot.</p></section>
+  <div style="padding:0 22px"><div class="stamp"><div class="inner">
+    <span class="cap">GRAHA<br>MEDIA<br>· ${new Date(o.createdAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short'}).toUpperCase()} ·</span>
+    <p class="eyebrow" style="text-align:left">Kartu pesanan</p>
+    <p class="code" style="text-align:left">${o.code}</p>
+    <p class="small" style="text-align:left">${esc(o.file.name)}<br>${o.sidesN} muka · ${o.config.paper} · ${o.copies} salinan</p>
+    <div class="ntotal"><span class="small" style="font-weight:700">Estimasi</span><b style="font-size:24px">${rp(o.est.total)}</b></div>
+    <div style="margin-top:12px">${patch(48,'done-heart')}</div>
+  </div></div></div>
+  <div class="sec stack">
+    <a class="btn btn-berry btn-block" href="#/pesanan">Lihat status pesanan</a>
+    <a class="btn btn-ghost btn-block" target="_blank" rel="noopener" href="${wa(WA_TOKO,`Halo Graha Media, saya baru mengirim pesanan ${o.code} (${o.file.name}).`)}">${I.chat} Kabari toko via WhatsApp</a>
+    <button class="btn btn-ghost btn-block" onclick="App.reset()">Cetak dokumen lain</button>
+  </div>`;
+}
+
+/* ---------- Status pesanan (mahasiswa) ---------- */
+function track(o){
+  const done=o.status==='Selesai';
+  return `<div class="track3"><span class="n on">${I.check}</span><span class="ln on"><i></i></span><span class="n on">${done?I.check:''}</span><span class="ln ${done?'on':''}"><i></i></span><span class="n ${done?'on':''}">${done?I.check:''}</span></div>
+  <div class="tlabels"><span>Terkirim</span><span>Diproses toko</span><span>Selesai</span></div>`;
+}
+function viewOrders(){
+  const mine=orders().filter(o=>o.mine).sort((a,b)=>b.createdAt-a.createdAt);
+  return `<div class="phone">${header()}
+  <section class="sec"><p class="eyebrow reveal">Pesanan saya</p><h1 class="h1 reveal">Status <em>pesananmu</em></h1></section>
+  <div class="sec stack" style="padding-top:0" data-stagger>
+  ${mine.length?mine.map(o=>`<article class="ocardS">
+    <div class="row between"><b class="serif" style="font-size:20px">${o.code}</b><span class="sbadge ${o.status==='Selesai'?'d':'p'}">${o.status==='Selesai'?I.check:I.clock} ${o.status}</span></div>
+    <p class="small muted">${esc(o.file.name)} · ${fdate(o.createdAt)}</p>
+    ${track(o)}
+    <div class="row between mt"><span class="price">${rp(o.est.total)} <small class="muted" style="font-weight:500">estimasi</small></span>
+      <a class="btn btn-ghost" style="min-height:44px;padding:8px 14px;font-size:13px" target="_blank" rel="noopener" href="${wa(WA_TOKO,`Halo Graha Media, saya mau tanya pesanan ${o.code} (${o.file.name}).`)}">${I.chat} Tanya</a></div>
+    ${o.status==='Selesai'?`<p class="small mt" style="display:flex;gap:8px;align-items:center">${patch(30,'done-heart')} Pesanan selesai, bisa diambil di toko.</p>`:''}
+  </article>`).join(''):`<div class="empty">${patch(70)}<h2 class="h2" style="font-size:22px">Belum ada pesanan</h2><p class="muted small" style="margin:6px 0 16px">Pesanan yang kamu kirim akan muncul di sini.</p><a class="btn btn-berry" href="#/pesan">${I.upload} Cetak PDF sekarang</a></div>`}
+  </div><p class="note" style="padding:0 18px">Status diperbarui otomatis. Coba ubah status di mode Admin.</p>
+  </div>${bnav('pesanan')}${waFab('Halo Graha Media, saya mau tanya status pesanan saya.')}`;
+}
+function viewProfile(){
+  const p=profile();
+  return `<div class="phone">${header()}<section class="sec"><p class="eyebrow reveal">Profil</p><h1 class="h1 reveal">Halo, <em>${esc(p.name.split(' ')[0])}</em></h1></section>
+  <div class="sec" style="padding-top:0"><div class="card reveal">
+    <div class="field" style="margin-top:0"><label for="pn">Nama</label><input class="inp" id="pn" value="${esc(p.name)}"></div>
+    <div class="field"><label for="pw">No. WhatsApp</label><input class="inp" id="pw" inputmode="tel" value="${esc(p.wa)}"></div>
+    <button class="btn btn-pine btn-block mt" onclick="App.saveProfile()">Simpan</button></div>
+    <p class="note mt">Prototype memakai akun demo. Login asli (email + kata sandi) dibuat di backend.</p></div>
+  </div>${bnav('')}`;
+}
+
+/* ---------- Admin ---------- */
+function adminShell(sub,content){
+  const nav=[['', 'Pesanan', I.receipt],['katalog','Katalog',I.tag],['tarif','Tarif',I.coins]];
+  return `<div class="adm"><aside class="side denim"><div class="lace" aria-hidden="true"></div>
+    <div class="brand">Graha Media<small>panel admin</small></div>
+    <nav aria-label="Menu admin">${nav.map(([h,l,i])=>`<a href="#/admin${h?'/'+h:''}" class="${sub===h?'on':''}">${i}<span>${l}</span></a>`).join('')}</nav>
+    <p class="who">Masuk sebagai Admin<br>Optimal untuk iPad & web</p></aside>
+    <main class="main">${content}</main></div>`;
+}
+function greet(){ const h=new Date().getHours(); return h<11?'pagi':h<15?'siang':h<18?'sore':'malam'; }
+function adminOrders(){
+  const all=orders(), today=all.filter(o=>new Date(o.createdAt).toDateString()===new Date().toDateString());
+  const pend=all.filter(o=>o.status==='Belum selesai').length, done=all.length-pend;
+  let list=all.slice().sort((a,b)=>S.busy?a.createdAt-b.createdAt:b.createdAt-a.createdAt);
+  if(S.admFilter!=='Semua') list=list.filter(o=>o.status===S.admFilter);
+  if(S.admQ){ const q=norm(S.admQ); list=list.filter(o=>norm(`${o.code} ${o.customer.name} ${o.file.name}`).includes(q)); }
+  if(!list.find(o=>o.code===S.admSel)) S.admSel=list[0]?list[0].code:null;
+  const sel=all.find(o=>o.code===S.admSel);
+  const busyList=all.filter(o=>o.status==='Belum selesai').sort((a,b)=>a.createdAt-b.createdAt);
+  return adminShell('',`
+    <p class="eyebrow reveal">${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})}</p>
+    <h1 class="h1 reveal">Selamat ${greet()}, <em>Pak Herman</em></h1>
+    <div class="stats" data-stagger>
+      <div class="stat"><span>Masuk hari ini</span><b class="count" data-to="${today.length}">${today.length}</b></div>
+      <div class="stat hot"><span>Belum selesai</span><b class="count" data-to="${pend}">${pend}</b></div>
+      <div class="stat"><span>Selesai</span><b class="count" data-to="${done}">${done}</b></div>
+    </div>
+    <div class="toolbar reveal">
+      ${S.busy?'':`<div class="searchbox">${I.search}<label class="sr" for="aq">Cari pesanan</label><input id="aq" type="search" placeholder="Cari kode, nama, atau file…" value="${esc(S.admQ)}" oninput="App.admQ(this.value)"></div>
+      <div class="seg">${['Belum selesai','Selesai','Semua'].map(s=>`<button class="${S.admFilter===s?'on':''}" onclick="App.admFilter('${s}')">${s}</button>`).join('')}</div>`}
+      <button class="btn ${S.busy?'btn-berry':'btn-ghost'}" onclick="App.busy()" aria-pressed="${S.busy}">${I.bolt} Mode sibuk ${S.busy?'aktif':''}</button>
+    </div>
+    ${S.busy?busyView(busyList):`<div class="split"><div class="olist" id="olist" data-stagger>${list.length?list.map(o=>`
+      <button class="ocard ${o.code===S.admSel?'on':''}" onclick="App.sel('${o.code}')">
+        <span class="c">${o.code}</span><span class="sbadge ${o.status==='Selesai'?'d':'p'}">${o.status==='Selesai'?I.check:I.clock} ${o.status}</span>
+        <span class="m">${esc(o.customer.name)} · ${esc(o.file.name)}</span>
+        <span class="m">${o.sidesN} muka · ${o.config.paper} · ${o.color.colN?'Warna':'Hitam putih'} · ${ago(o.createdAt)}</span>
+      </button>`).join(''):'<p class="muted">Tidak ada pesanan.</p>'}</div>
+      <div>${sel?detailPanel(sel):''}</div></div>`}
+  `);
+}
+function busyView(list){
+  if(!list.length) return `<div class="empty card">${patch(70)}<h2 class="h2" style="font-size:22px">Semua pesanan beres</h2><p class="muted small">Tidak ada pesanan yang menunggu.</p></div>`;
+  return `<div class="busygrid" data-stagger>${list.map(o=>`<article class="bcard" id="b-${o.code}">
+    <div class="row between"><span class="c">${o.code}</span><span class="small muted">${ago(o.createdAt)}</span></div>
+    <b>${esc(o.customer.name)}</b>
+    <span class="small muted">${o.sidesN} muka · ${o.config.paper} ${o.config.duplex?'· bolak-balik':''} · ${o.copies}× · ${o.color.colN?'Warna':'Hitam putih'}${o.finishing.jilid!=='none'?' · jilid':''}${o.finishing.laminasi?' · laminasi':''}</span>
+    ${o.note?`<span class="small">“${esc(o.note)}”</span>`:''}
+    <button class="btn btn-pine" onclick="App.busyDone('${o.code}')">${I.check} Selesai</button>
+  </article>`).join('')}</div>`;
+}
+function detailPanel(o){
+  const c=o.config, done=o.status==='Selesai';
+  const msg=`Halo ${o.customer.name}, pesanan ${o.code} di Graha Media ${done?'sudah selesai dan bisa diambil di toko':'sedang kami proses'}.`;
+  return `<section class="dpanel reveal" aria-live="polite">
+    <div class="row between" style="align-items:flex-start"><div><p class="eyebrow">Detail pesanan</p><h2>${o.code}</h2><p class="small muted">${fdate(o.createdAt)} · ${esc(o.customer.name)} · ${esc(o.customer.wa)}</p></div>
+      <span class="sbadge ${done?'d':'p'}">${done?I.check:I.clock} ${o.status}</span></div>
+    <div class="actions">
+      ${done?`<button class="btn btn-ghost" onclick="App.setStatus('${o.code}','Belum selesai')">Kembalikan ke Belum selesai</button>`:`<button class="btn btn-pine" onclick="App.setStatus('${o.code}','Selesai')">${I.check} Tandai Selesai</button>`}
+      <a class="btn btn-ghost" target="_blank" rel="noopener" href="${wa(o.customer.wa,msg)}">${I.chat} Chat pelanggan</a>
+      <button class="btn btn-ghost" disabled title="Prototype tidak menyimpan file. Versi backend memakai Supabase Storage.">${I.download} Unduh PDF</button>
+    </div>
+    <div class="dsec"><h4>Dokumen</h4><p class="small"><b>${esc(o.file.name)}</b> · ${o.file.pages} halaman · ${esc(o.file.mb)}</p>
+      <div class="thumbrow mt">${o.thumbs.length?o.thumbs.map((t,i)=>`<img src="${t}" alt="Halaman ${i+1}">`).join(''):Array(Math.min(o.file.pages,5)).fill(0).map(()=>`<div class="tph"><div class="mini" style="width:70%;transform:none;box-shadow:none"><i></i><i></i><i class="s"></i></div></div>`).join('')}</div></div>
+    <div class="dsec"><h4>Konfigurasi cetak</h4><div class="cfg">
+      <div><small>Kertas</small><b>${c.paper}</b></div><div><small>Orientasi</small><b>${c.orient==='portrait'?'Portrait':'Landscape'}</b></div>
+      <div><small>Skala</small><b>${c.scale==='fit'?'Sesuaikan':'Ukuran asli'}</b></div><div><small>Sisi</small><b>${c.duplex?'Bolak-balik':'Satu sisi'}</b></div>
+      <div><small>Layout</small><b>${c.layout} hal/lbr</b></div><div><small>Salinan</small><b>${o.copies}</b></div>
+      <div><small>Lembar</small><b>${o.sheets} / salinan</b></div><div><small>Finishing</small><b>${[o.finishing.jilid!=='none'?(o.finishing.jilid==='soft'?'Jilid soft':'Jilid spiral'):'',o.finishing.laminasi?'Laminasi':'',o.finishing.potong?'Potong':''].filter(Boolean).join(', ')||'—'}</b></div>
+    </div></div>
+    <div class="dsec"><h4>Smart Print Check</h4><p class="small"><b>${o.check.score}/${o.check.total}</b> halaman tanpa catatan</p>
+      ${o.check.issues.length?`<ul class="small" style="margin:6px 0 0 18px">${o.check.issues.map(i=>`<li>${esc(i)}</li>`).join('')}</ul><p class="note" style="margin-top:6px">Pelanggan sudah melihat peringatan ini dan memilih melanjutkan.</p>`:'<p class="small muted">Tidak ada peringatan.</p>'}</div>
+    <div class="dsec"><h4>Peta warna & estimasi</h4><p class="small">${o.color.colN} muka berwarna${o.color.colN?` (tertinggi ${pct(o.color.maxPct)}%)`:''} · ${o.color.bwN} muka hitam putih</p>
+      ${o.est.lines.map(l=>`<div class="nline small"><span>${esc(l.label)} <span class="muted">· ${esc(l.sub)}</span></span><b>${rp(l.amount)}</b></div>`).join('')}
+      <div class="ntotal"><span style="font-weight:700">Estimasi total</span><b style="font-size:24px">${rp(o.est.total)}</b></div></div>
+    ${o.note?`<div class="dsec"><h4>Catatan pelanggan</h4><p>“${esc(o.note)}”</p></div>`:''}
+    <div class="dsec"><h4>Riwayat status</h4><div class="hist">${o.history.map(h=>`<span>${fdate(h.at)} · ${h.status} · oleh ${h.by}</span>`).join('')}</div></div>
+  </section>`;
+}
+function adminCatalog(){
+  return adminShell('katalog',`<p class="eyebrow reveal">Kelola katalog</p><h1 class="h1 reveal">Data produk <em>konsisten</em></h1>
+  <p class="muted reveal" style="margin:6px 0 18px;max-width:70ch">Semua produk mengikuti skema <code>products</code> (PRD bagian 6). Di prototype data dibaca dari array PRODUCTS; versi backend membaca tabel Supabase dan memvalidasi di server.</p>
+  <div class="row reveal" style="margin-bottom:14px"><button class="btn btn-pine" disabled title="Tersedia setelah backend siap">+ Tambah produk</button><span class="note">Tambah/ubah produk aktif setelah backend terhubung.</span></div>
+  <div class="tblwrap reveal"><table class="tbl"><thead><tr><th>SKU</th><th>Nama</th><th>Kategori</th><th>Satuan</th><th>Harga dasar</th><th>Tarif</th><th>Estimasi</th><th>Tag</th><th>Validasi</th></tr></thead><tbody>
+  ${PRODUCTS.map(p=>{ const miss=validateProduct(p); return `<tr><td><b>${p.sku}</b></td><td>${esc(p.name)}</td><td>${catName(p.category)}</td><td>${UNIT[p.pricing_unit]}</td><td class="num">${rp(p.base_price)}</td><td>${priceTag(p)}</td><td>${esc(p.lead_time)}</td><td class="small muted">${p.tags.slice(0,4).map(esc).join(', ')}${p.tags.length>4?'…':''}</td><td>${miss.length?`<span class="badge b-warn">${miss.join(', ')}</span>`:'<span class="badge b-ok">✓ lengkap</span>'}</td></tr>`; }).join('')}
+  </tbody></table></div>`);
+}
+function adminTariff(){
+  const rows=[
+    ['Cetak hitam putih A4','per muka',rp(TARIF.bw)+' (Rp1.000 / 3)','terkonfirmasi'],
+    ...TARIF.tiers.map((t,i)=>[`Cetak warna A4 · ${i?TARIF.tiers[i-1].max:1}–${t.max>100?100:t.max}% area berwarna`,'per muka',rp(t.price),'simulasi']),
+    ['Faktor kertas F4','pengali','× '+TARIF.paperFactor.F4,'simulasi'],
+    ['Faktor kertas A3','pengali','× '+TARIF.paperFactor.A3,'simulasi'],
+    ...['JLD-001','JLD-002','FIN-001','FIN-002'].map(s=>{const p=prod(s);return [p.name,'per '+UNIT[p.pricing_unit],rp(p.base_price),p.price_status];})
+  ];
+  return adminShell('tarif',`<p class="eyebrow reveal">Kelola tarif</p><h1 class="h1 reveal">Tabel <em>tarif</em></h1>
+  <p class="muted reveal" style="margin:6px 0 18px;max-width:70ch">Satu sumber tarif untuk katalog, Peta Warna, dan Nota Jahit. Tarif bertanda simulasi menunggu konfirmasi Pak Herman (Minggu 1).</p>
+  <div class="tblwrap reveal"><table class="tbl" style="min-width:600px"><thead><tr><th>Item</th><th>Satuan</th><th>Tarif</th><th>Status</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td><span class="badge ${r[3]==='terkonfirmasi'?'b-ok':'b-sim'}">${r[3]}</span></td></tr>`).join('')}
+  </tbody></table></div>`);
+}
+
+/* =========================================================
+   ROUTER & RENDER
+   ========================================================= */
+function render(instant){
+  const h=location.hash.replace(/^#\/?/,''), [a,b]=h.split('/');
+  const changed = h!==S.route; S.route=h;
+  const isAdmin = a==='admin';
+  document.body.className = isAdmin?'admin':'student';
+  $('#dm-s').classList.toggle('on',!isAdmin); $('#dm-a').classList.toggle('on',isAdmin);
+  let html;
+  if(isAdmin) html = b==='katalog'?adminCatalog():b==='tarif'?adminTariff():adminOrders();
+  else if(a==='katalog') html=viewCatalog();
+  else if(a==='produk') html=viewProduct(b);
+  else if(a==='pesan'){
+    if(!S.flow || S.flow.done || (changed && b && S.flow.step===1 && !S.flow.loading)) S.flow=newFlow(b);
+    html=viewFlow();
+  }
+  else if(a==='pesanan') html=viewOrders();
+  else if(a==='profil') html=viewProfile();
+  else html=viewHome();
+  $('#app').innerHTML=html;
+  if(changed) window.scrollTo(0,0);
+  initFx(instant && !changed);
+  document.title = isAdmin ? 'Admin · Graha Media' : 'Graha Media — Studio Cetak';
+}
+
+/* =========================================================
+   ANIMASI SCROLL
+   ========================================================= */
+let io;
+function initFx(instant){
+  if(io) io.disconnect();
+  $$('[data-stagger]').forEach(p=>[...p.children].forEach((c,i)=>{
+    if(!c.classList.contains('tilt')) c.classList.add('reveal');
+    c.style.transitionDelay = Math.min(i,8)*60+'ms';
+  }));
+  const els=$$('.reveal,.tilt');
+  if(instant || RM || !('IntersectionObserver' in window)){ els.forEach(e=>{e.classList.add('in'); e.style.transitionDelay='0ms';}); }
+  else {
+    io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); if(e.target.classList.contains('stat')) countUp(e.target.querySelector('.count')); } }),{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+    els.forEach(e=>io.observe(e));
+  }
+  const tot=$('#total'); if(tot && !instant) countUp(tot, true);
+  onScroll();
+}
+function countUp(el, money){
+  if(!el) return; const to=+el.dataset.to; if(RM||!to){ el.textContent=money?rp(to):to; return; }
+  const t0=performance.now(), dur=650;
+  (function tick(t){ const k=Math.min(1,(t-t0)/dur), v=to*(1-Math.pow(1-k,3)); el.textContent=money?rp(Math.round(v/100)*100):Math.round(v); if(k<1) requestAnimationFrame(tick); else el.textContent=money?rp(to):to; })(t0);
+}
+let lastY=0, ticking=false;
+function onScroll(){
+  const y=window.scrollY, vh=window.innerHeight;
+  const hdr=$('#hdr'); if(hdr) hdr.classList.toggle('shrink', y>40);
+  if(!RM){ const lace=$('#lace'); if(lace) lace.style.transform=`translateY(${y*0.3}px)`; }
+  $$('.stitch-draw').forEach(el=>{ const r=el.getBoundingClientRect(); const p=RM?1:Math.max(0,Math.min(1,(vh-r.top)/(vh*.55))); el.style.clipPath=`inset(0 ${100-p*100}% 0 0)`; });
+  const st=$('#steps'), fill=$('#stepsfill');
+  if(st && fill){ const r=st.getBoundingClientRect(); const p=RM?1:Math.max(0,Math.min(1,(vh*.75-r.top)/r.height)); fill.style.height=(p*100)+'%'; }
+  const tk=$('#ticker'); if(tk && Math.abs(y-lastY)>4) tk.classList.toggle('rev', y<lastY);
+  lastY=y;
+}
+window.addEventListener('scroll',()=>{ if(!ticking){ ticking=true; requestAnimationFrame(()=>{ onScroll(); ticking=false; }); } },{passive:true});
+
+/* =========================================================
+   AKSI
+   ========================================================= */
+const App = {
+  search(v, fill){
+    S.q=v; if(fill){ const q=$('#q'); if(q){ q.value=v; q.focus(); } }
+    const sg=$('#sugg'); if(sg) sg.hidden=!!v;
+    $('#results').innerHTML=resultsHTML(); initFx(false);
+  },
+  cat(id){ S.cat=id; render(true); $('#results') && initFx(false); },
+  sort(v){ S.sort=v; $('#results').innerHTML=resultsHTML(); initFx(false); },
+  pick(file){ pickFile(file).catch(e=>{ console.error(e); S.flow.loading=null; S.flow.error='Terjadi kesalahan saat membaca file. Coba lagi.'; render(true); }); },
+  sample(){ useSample(); },
+  reset(){ const p=S.flow&&S.flow.product?prod(S.flow.product).slug:''; S.flow=newFlow(p); if(location.hash!=='#/pesan'+(p?'/'+p:'')) location.hash='#/pesan'+(p?'/'+p:''); else { render(); } },
+  step(n){ const f=S.flow; if(n<1||n>5||(n>1&&!f.pages.length)) return; if(n===3 && f.sheet>=sides(f).length) f.sheet=0; f.step=n; render(); window.scrollTo({top:0,behavior:RM?'auto':'smooth'}); },
+  gotoPage(n){ const f=S.flow; const idx=sides(f).findIndex(s=>s.some(p=>p.n===n)); f.sheet=Math.max(0,idx); f.step=3; render(); window.scrollTo(0,0); },
+  skipBlank(v){ S.flow.skipBlank=v; S.flow.sheet=0; toast(v?'Halaman kosong akan dilewati':'Halaman kosong tetap dicetak'); },
+  cfg(k,v){
+    const f=S.flow;
+    if(k==='allBW'){ f.allBW = v==='true'; return render(true); }
+    if(k==='jilid'){ f.jilid=v; return render(true); }
+    if(k==='duplex') v = v==='true';
+    if(k==='layout'){ v=+v; f.sheet=0; }
+    if(k==='paper') f.paperSet=true;
+    if(k==='orient') f.orientSet=true;
+    f.config[k]=v; render(true);
+  },
+  sheet(d){ const f=S.flow, n=sides(f).length; f.sheet=Math.max(0,Math.min(n-1,f.sheet+d)); render(true); },
+  copies(d){ const f=S.flow; f.copies=Math.max(1,Math.min(99,f.copies+d)); render(true); },
+  fin(k,v){ S.flow[k]=v; },
+  bwSide(list){ const f=S.flow; const ns=list.split(',').map(Number); const on=!ns.some(n=>f.bw[n]); ns.forEach(n=>{ if(on) f.bw[n]=true; else delete f.bw[n]; }); render(true); },
+  agree(v){ S.flow.agreed=v; $('#sendbtn').disabled=!v; },
+  submit(){
+    const f=S.flow, est=estimate(f), nm=$('#nm').value.trim()||'Mahasiswa', wn=$('#wn').value.trim();
+    if(!/^\+?\d[\d\s-]{8,}$/.test(wn)){ toast('Periksa lagi nomor WhatsApp-mu'); $('#wn').focus(); return; }
+    db.set('gm_profile',{name:nm, wa:wn});
+    const issues=f.checks.rows.filter(r=>r.st==='warn').map(r=>`${r.title}: ${r.pages?'hal. '+listPages(r.pages):''} ${r.text}`.trim());
+    if(f.skipBlank && f.pages.some(p=>p.blank)) issues.push('Pelanggan memilih melewati halaman kosong');
+    const now=Date.now();
+    const o={code:nextCode(), createdAt:now, mine:true, customer:{name:nm, wa:wn}, file:{name:f.file.name, pages:f.file.pages, mb:f.file.mb},
+      config:{...f.config}, copies:f.copies, sheets:est.sheets, sidesN:est.sidesN, finishing:{jilid:f.jilid, laminasi:f.laminasi, potong:f.potong}, note:f.note,
+      est:{total:est.total, lines:est.lines.map(l=>({label:l.label, sub:l.sub, amount:l.amount}))}, color:{colN:est.colN, bwN:est.bwN, maxPct:est.maxPct},
+      check:{score:f.checks.score, total:f.checks.total, issues}, thumbs:f.pages.slice(0,8).map(p=>p.thumb), status:'Belum selesai', history:[{at:now, status:'Belum selesai', by:'Sistem'}]};
+    const all=orders(); all.push(o); saveOrders(all);
+    f.done=o; render(); window.scrollTo(0,0);
+  },
+  saveProfile(){ db.set('gm_profile',{name:$('#pn').value.trim()||'Mahasiswa', wa:$('#pw').value.trim()}); toast('Profil disimpan'); },
+  /* admin */
+  sel(code){ S.admSel=code; render(true); if(window.innerWidth<768){ const d=$('.dpanel'); d&&d.scrollIntoView({behavior:RM?'auto':'smooth'}); } },
+  admFilter(s){ S.admFilter=s; render(true); },
+  admQ(v){ S.admQ=v; render(true); const el=$('#aq'); if(el){ el.focus(); el.setSelectionRange(v.length,v.length); } },
+  busy(){ S.busy=!S.busy; render(); },
+  setStatus(code,status){
+    const all=orders(), o=all.find(x=>x.code===code); if(!o) return;
+    o.status=status; o.history.push({at:Date.now(), status, by:'Admin'}); saveOrders(all);
+    toast(`${code} ditandai ${status}`); render(true);
+  },
+  busyDone(code){ const c=$('#b-'+code); if(c && !RM){ c.classList.add('leaving'); setTimeout(()=>App.setStatus(code,'Selesai'),300); } else App.setStatus(code,'Selesai'); }
+};
+window.App=App; window.S=S;
+
+/* Sinkron status antar tab (admin ↔ mahasiswa) */
+window.addEventListener('storage', e=>{ if(e.key==='gm_orders'){ delete mem.gm_orders; if(/^(pesanan|admin)/.test(S.route)) render(true); } });
+setInterval(()=>{ if(S.route==='pesanan' && document.visibilityState==='visible'){ delete mem.gm_orders; const sig=JSON.stringify(orders().filter(o=>o.mine).map(o=>o.status)); if(sig!==App._sig){ if(App._sig!==undefined) render(true); App._sig=sig; } } }, 3000);
+
+seed();
+window.addEventListener('hashchange',()=>render());
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+/* =========================================================
+   base.css — token warna, reset, tipografi, tombol, form
+   Palet: Winter Palettes (Snowflake, Mist, Pine, Berry, Branch, Frosty Silver)
+   ========================================================= */
+:root{
+  --snow:#DCE0E8;   /* Snowflake  : latar utama */
+  --mist:#8EA1AE;   /* Mist       : border, status "Belum selesai" */
+  --pine:#27363F;   /* Pine       : teks utama, header, nav */
+  --berry:#6B212C;  /* Berry      : tombol utama, harga, aksen */
+  --branch:#685652; /* Branch     : teks sekunder, jahitan */
+  --frost:#BEB3AC;  /* FrostySilver: kartu, tag */
+  --paper:#F6F4F1;  /* permukaan kertas (turunan Snowflake) */
+  --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --shadow:0 12px 30px -16px rgba(39,54,63,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--snow);color:var(--pine);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+svg{flex:none}
+:focus-visible{outline:2px solid var(--berry);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Bar pratinjau (khusus demo) */
+#demobar{position:sticky;top:0;z-index:70;height:34px;display:flex;gap:8px;align-items:center;justify-content:center;background:var(--pine);color:var(--snow);font-size:12px;padding:0 8px}
+#demobar button{padding:3px 12px;border-radius:99px;border:1px dashed rgba(220,224,232,.5);font-size:12px}
+#demobar button.on{background:var(--snow);color:var(--pine);border-style:solid}
+
+/* Tipografi */
+.h1{font-family:var(--serif);font-size:30px;line-height:1.1;font-weight:700}
+.h2{font-family:var(--serif);font-size:25px;line-height:1.15;font-weight:700}
+.h1 em,.h2 em{font-style:italic;color:var(--berry);font-weight:500}
+.serif{font-family:var(--serif)}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--branch);font-weight:700;margin-bottom:6px}
+.muted{color:var(--branch)}
+.small{font-size:13px}
+.note{font-size:12px;color:var(--branch);font-style:italic}
+
+/* Tata letak kecil */
+.sec{padding:22px 18px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:12px}
+.mt{margin-top:14px}
+.card{background:var(--paper);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+
+/* Tombol */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:14px;font-weight:600;min-height:48px;transition:transform .15s,background .2s,opacity .2s;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn svg{width:18px;height:18px}
+.btn-berry{background:var(--berry);color:var(--paper);box-shadow:0 10px 20px -12px rgba(107,33,44,.9)}
+.btn-pine{background:var(--pine);color:var(--paper)}
+.btn-paper{background:var(--paper);color:var(--pine)}
+.btn-ghost{border:1.5px dashed var(--mist);color:var(--pine);background:transparent}
+.btn-sm{min-height:40px;padding:8px 14px;font-size:13px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.42;pointer-events:none}
+
+/* Badge */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;width:fit-content;white-space:nowrap}
+.b-ok{background:var(--pine);color:var(--paper)}
+.b-sim{border:1px dashed var(--branch);color:var(--branch)}
+.b-warn{background:var(--berry);color:var(--paper)}
+.b-mist{background:var(--mist);color:var(--pine)}
+.price{font-weight:700;color:var(--berry);font-variant-numeric:tabular-nums}
+
+/* Form */
+.field{margin-top:16px}
+.field>label,.field>.lbl{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--branch);margin-bottom:7px}
+textarea,.inp,select.inp{width:100%;border:1.5px dashed var(--frost);background:#fff;border-radius:14px;padding:11px 13px;font-size:16px;outline:none;min-height:46px}
+textarea:focus,.inp:focus{border-color:var(--pine);border-style:solid}
+.inp.err{border-color:var(--berry);border-style:solid}
+.seg{display:flex;background:var(--snow);border-radius:13px;padding:4px;gap:4px}
+.seg button{flex:1;padding:9px 6px;border-radius:10px;font-size:13px;font-weight:600;min-height:42px;transition:background .2s,color .2s}
+.seg button.on{background:var(--pine);color:var(--paper)}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-top:8px;min-height:36px;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--berry);flex:none}
+.alert{padding:11px 13px;border-radius:12px;background:rgba(107,33,44,.08);border-left:3px solid var(--berry);font-size:13px}
+.alert.info{background:rgba(39,54,63,.06);border-left-color:var(--pine)}
+
+/* Toast */
+#toast{position:fixed;left:50%;bottom:150px;transform:translate(-50%,20px);background:var(--pine);color:var(--paper);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.3s;z-index:90;outline:1.5px dashed rgba(246,244,241,.4);outline-offset:-5px;max-width:90vw}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+body.admin #toast{bottom:30px}
